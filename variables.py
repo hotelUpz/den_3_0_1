@@ -9,11 +9,34 @@ class PARAMS(SETTINGSS):
         # print("init VARIABLES")
         self.market_place = 'binance'
         self.default_tg_vars() 
-        self.init_all_params()
-
-        # /////////
+        self.init_some_params()
+        self.ema_settings()
+        self.default_statistic_vars()
         self.init_main_file_variables()
         self.init_keys()
+        self.indicators_strategy_text_patterns = {
+            '1': 'ema_crossover',
+            '2': 'ema_crossover + trend_line',
+            '3': 'ema_crossover + stoch_rsi_crossover',
+            '4': 'ema_crossover + stoch_rsi_overTrade',
+            '5': 'ema_crossover + stoch_rsi_overTrade + trend_line',
+            '6': 'smart_random + trend_line',
+        }
+
+        self.stop_loss_global_type_text_patterns = {
+            '1': 'Trailing',
+            '2': 'Fixed',      
+        }
+
+        self.stop_loss_ratio_mode_text_patterns = {
+            '1': 'static',
+            '2': 'volatility_total_period',
+            '3': 'last_volatility',
+            '4': 'last_candle_length',
+            '5': 'last_candle_length/2',
+            '6': 'last_minimum',
+            '7': 'absolute_minimum',
+        }
 
     def init_main_file_variables(self):
         self.current_signal_val = None
@@ -43,8 +66,7 @@ class PARAMS(SETTINGSS):
         self.cur_date = None
         self.is_time_to_show_done = False
 
-    def init_all_params(self):
-
+    def init_some_params(self):
         # ////////////////////// некоторые переменные:
         self.cur_klines_data = None
         self.direction = None 
@@ -52,9 +74,6 @@ class PARAMS(SETTINGSS):
         self.cur_martin_gale_counter = 0  
         self.last_message = None
         #///////////////////////////////////////////////
-        self.ema_settings()
-        self.default_statistic_vars()
-        # self.init_keys()
 
     def ema_settings(self):
         self.interval = str(self.kline_time) + self.time_frame

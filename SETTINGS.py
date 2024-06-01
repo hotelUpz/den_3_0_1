@@ -28,11 +28,11 @@ class SETTINGSS():
         # 3 -- 'ema_crossover + stoch_rsi_crossover':  ema кроссовер плюс кроссовер стохастик_рси
         # 4 -- 'ema_crossover + stoch_rsi_overTrade':  ema кроссовер плюс кроссовер стохастик_рси
         # 5 -- 'ema_crossover + stoch_rsi_overTrade + trend_line': то же что и предыдущий но плюс ориентрироваться на линию тренда
-        # 6 - 'smart_random + trend_line'
+        # 6 - 'smart_random + trend_line' # рандомный выбор сигнала с ориентацией на тренд
         self.ema1_period = 5 # - длина короткой волны
         self.ema2_period = 20 # - длина длинной волны
         self.ema_trend_line = 240 # - длинга тренда
-        self.stoch_rsi_over_sell, self.stoch_rsi_over_buy = 30, 70
+        self.stoch_rsi_over_sell, self.stoch_rsi_over_buy = 30, 70 # уровни перепроданности и перекупленности стохастик-рси
         self.is_reverse_signal = 1 # Вкл/Выкл: -1/1 # использовать обратный сигнал. Если шорт то лонг и наоборот. Чтобы активировать введите значение -1 (минус один)
 
         # /////////////////////////////////////////////////////////////

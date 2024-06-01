@@ -7,7 +7,11 @@ class TG_MANAGER(MAIN_CONTROLLER):
     def __init__(self):
         super().__init__()  
         self.stop_redirect_flag = False  
-        self.settings_redirect_flag = False 
+        self.settings_redirect_flag = False
+        self.martin_gale_redirect_flag = False
+        self.indicators_redirect_flag = False
+        self.tp_sl_redirect_flag = False
+        self.documentation_redirect_flag = False
 
     def run(self):  
         try: 
@@ -45,7 +49,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
                             if self.run_flag:
                                 message.text = self.connector_func(message, "Сперва остановите робота ..")
                             else:
-                                self.init_all_params() 
+                                self.init_some_params() 
                                 message.text = self.connector_func(message, "Здравствуйте! Для начала работы выберите одну из опций.(Начать торговлю нажмите 'GO')")                               
                                 # self.main_func() 
                         except Exception as ex: 
@@ -131,7 +135,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 # self.last_message = message
                 self.settings_redirect_flag = False
                 # сбрасываем значения переменных:
-                self.init_all_params() 
+                self.init_some_params() 
                 self.init_main_file_variables()
                 dataa = [x for x in message.text.split(' ') if x and x.strip()]
                 self.symbol = dataa[0].upper()  
@@ -146,9 +150,93 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 
                 self.was_change_leverage_true = True
             # /////////////////////////////////////////////////////////////////////////////// 
+
+            # ////////////////////////////////////////////////////////////////////////////
+            @self.bot.message_handler(func=lambda message: message.text == 'MARTIN_GALE')             
+            def handle_martin_gale(message):
+                self.last_message = message
+                if self.seq_control_flag:
+                    self.bot.send_message(message.chat.id, "Введите через пробел флаг МАртин Гейла (1 или 0), множитель депозита (например 2) и счетчик Мартин Гейла (до скольки раз умножиать позицию)")
+                    self.martin_gale_redirect_flag = True
+                else:
+                    self.bot.send_message(message.chat.id, "Нажмите START для верификации")
+
+            @self.bot.message_handler(func=lambda message: self.martin_gale_redirect_flag)             
+            def handle_martin_gale_redirect(message):
+                # self.last_message = message
+                self.martin_gale_redirect_flag = False
+                dataa = [x for x in message.text.split(' ') if x and x.strip()]
+                self.martin_gale_flag = int(float(dataa[0]))
+                self.martin_gale_ratio = float(dataa[1])
+                self.max_martin_gale_counter = float(dataa[2]) 
+                self.bot.send_message(message.chat.id, f"Изменились следующие настройки Мартин Гейла:\nmartin_gale_flag: {self.martin_gale_flag}\nmartin_gale_ratio: {self.martin_gale_ratio}\nmax_martin_gale_counter: {self.max_martin_gale_counter}")
+
+            # ////////////////////////////////////////////////////////////////////////////
+            @self.bot.message_handler(func=lambda message: message.text == 'INDICATORS')             
+            def handle_indicators(message):
+                self.last_message = message
+                if self.seq_control_flag:
+                    self.bot.send_message(message.chat.id, "Введите номер стратегии индикатора")
+                    self.indicators_redirect_flag = True
+                else:
+                    self.bot.send_message(message.chat.id, "Нажмите START для верификации")
+
+            @self.bot.message_handler(func=lambda message: self.indicators_redirect_flag)             
+            def handle_indicators_redirect(message):
+                # self.last_message = message
+                self.indicators_redirect_flag = False
+                self.indicators_strategy_number = int(float(message.text.split(' ')))
+                self.ema_settings()
+                self.bot.send_message(message.chat.id, f"Текущий номер стратегии индикатора: {self.indicators_strategy_number}")
+
+            # ////////////////////////////////////////////////////////////////////////////
+            @self.bot.message_handler(func=lambda message: message.text == 'TP/SL')             
+            def handle_tp_sl(message):
+                self.last_message = message
+                if self.seq_control_flag:
+                    self.bot.send_message(message.chat.id, "Введите через пробел номер глобальной стратегии TP/SL (1 или 2), способ расчета стоп лосс коэффициента (1 - 7), значение статического стоп лосс коэффициента в процентах, например 1 и соотношение риска к прибыли (1:4). Пример ввода: 2 1 0.5 1:4")
+                    self.tp_sl_redirect_flag = True
+                else:
+                    self.bot.send_message(message.chat.id, "Нажмите START для верификации")
+
+            @self.bot.message_handler(func=lambda message: self.tp_sl_redirect_flag)             
+            def handle_tp_sl_redirect(message):
+                # self.last_message = message
+                self.tp_sl_redirect_flag = False
+                dataa = [x for x in message.text.split(' ') if x and x.strip()]
+                self.stop_loss_global_type = int(float(dataa[0]))
+                self.stop_loss_ratio_mode = int(float(dataa[1]))
+                self.static_stop_loss_ratio_val = float(dataa[2])
+                self.risk_reward_ratio = dataa[3]
+                self.bot.send_message(message.chat.id, "Настройки стоп лосс стратегии применены успешно!")  
+
+            # ////////////////////////////////////////////////////////////////////////////
+            @self.bot.message_handler(func=lambda message: message.text == 'DOCUMENTATION')             
+            def handle_documentation(message):
+                self.last_message = message
+                if self.seq_control_flag:
+                    self.bot.send_message(message.chat.id, "Введите соответствующий номер интересующего вас вопроса:\n1 -- Стратегии индикаторов\n2 -- Стратегии TP/SL\n3 -- Способы расчета стоп лосс коэффициента")
+                    self.documentation_redirect_flag = True
+                else:
+                    self.bot.send_message(message.chat.id, "Нажмите START для верификации")
+
+            @self.bot.message_handler(func=lambda message: self.documentation_redirect_flag)             
+            def handle_documentation_redirect(message):
+                self.documentation_redirect_flag = False
+                dataa = message.text.strip()
+                mess = ""
+                if dataa == '1':
+                    mess = self.indicators_documentation.__doc__
+                elif dataa == '2':
+                    mess = self.tp_sl_strategies_documenttion.__doc__
+                elif dataa == '3':
+                    mess = self.sl_ratio_documentation.__doc__
+                else:
+                    mess = "Нажмите кнопку заново и введите корректные данные"                 
+                if mess:
+                    self.bot.send_message(message.chat.id, mess)                
             # self.bot.polling()
             self.bot.infinity_polling()
         except Exception as ex:
-            pass 
             print(ex)
             # self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")

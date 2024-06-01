@@ -8,7 +8,18 @@ class INDICATORS(BINANCE_API):
         # устанавливаем функциии декораторы
         self.calculate_ema = self.log_exceptions_decorator(self.calculate_ema)
         self.calculate_stoch_rsi = self.log_exceptions_decorator(self.calculate_stoch_rsi)
-        self.calculate_atr = self.log_exceptions_decorator(self.calculate_atr)   
+        self.calculate_atr = self.log_exceptions_decorator(self.calculate_atr)
+
+    def indicators_documentation(self):
+        """
+            # номера стратегии индикаторов:
+            # 1 -- 'ema_crossover': классическая стратегия прересечения двух ema (кроссовер)
+            # 2 -- 'ema_crossover + trend_line': кроссовер ema плюс ориентироваться на линию тренда ema. Период равен ema_trend_line (сейчас 240). (Смотри в настройках программы)
+            # 3 -- 'ema_crossover + stoch_rsi_crossover': ema кроссовер плюс кроссовер стохастик-рси
+            # 4 -- 'ema_crossover + stoch_rsi_overTrade': ema кроссовер плюс овертрейд стохастик-рси
+            # 5 -- 'ema_crossover + stoch_rsi_overTrade + trend_line': то же что и предыдущий, но плюс ориентрироваться на линию тренда
+            # 6 - 'smart_random + trend_line' # рандомный выбор сигнала c ориентацией на тренд. Рекомендуется использовать только для тестов
+        """
     # pandas_ta library: .......................................  
      
     def calculate_ema(self, data, ema1_period, ema2_period, ema3_period):
