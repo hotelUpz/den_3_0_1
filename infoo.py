@@ -7,7 +7,6 @@ class INFO(UTILS):
     def __init__(self):
         super().__init__()
         # устанавливаем функциии декораторы
-        self.stop_logic_documentation = self.log_exceptions_decorator(self.stop_logic_documentation)
         self.post_trade_info_raport = self.log_exceptions_decorator(self.post_trade_info_raport)
         self.response_order_logger = self.log_exceptions_decorator(self.response_order_logger)
 

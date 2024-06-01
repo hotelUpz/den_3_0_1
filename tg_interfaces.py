@@ -7,7 +7,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
     def __init__(self):
         super().__init__()  
         self.stop_redirect_flag = False  
-        self.settings_redirect_flag = False
+        self.trades_data_redirect_flag = False
         self.martin_gale_redirect_flag = False
         self.indicators_redirect_flag = False
         self.tp_sl_redirect_flag = False
@@ -121,19 +121,19 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 else:
                     self.bot.send_message(message.chat.id, "Нажмите START для верификации")
             # ////////////////////////////////////////////////////////////////////////////
-            @self.bot.message_handler(func=lambda message: message.text == 'SETTINGS')             
-            def handle_settings(message):
+            @self.bot.message_handler(func=lambda message: message.text == 'TRADES_DATA')             
+            def handle_trades_data(message):
                 self.last_message = message
                 if self.seq_control_flag:
                     self.bot.send_message(message.chat.id, "Введите торговую пару, размер депозита (в usdt) и кредитное плечо. Например: btcusdt 20 2")
-                    self.settings_redirect_flag = True
+                    self.trades_data_redirect_flag = True
                 else:
                     self.bot.send_message(message.chat.id, "Нажмите START для верификации")
 
-            @self.bot.message_handler(func=lambda message: self.settings_redirect_flag)             
-            def handle_settings_redirect(message):
+            @self.bot.message_handler(func=lambda message: self.trades_data_redirect_flag)             
+            def handle_trades_data_redirect(message):
                 # self.last_message = message
-                self.settings_redirect_flag = False
+                self.trades_data_redirect_flag = False
                 # сбрасываем значения переменных:
                 self.init_some_params() 
                 self.init_main_file_variables()
@@ -156,7 +156,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
             def handle_martin_gale(message):
                 self.last_message = message
                 if self.seq_control_flag:
-                    self.bot.send_message(message.chat.id, "Введите через пробел флаг МАртин Гейла (1 или 0), множитель депозита (например 2) и счетчик Мартин Гейла (до скольки раз умножиать позицию)")
+                    self.bot.send_message(message.chat.id, "Введите через пробел флаг МАртин Гейла (1 или 0), множитель депозита (например 2) и счетчик Мартин Гейла (до скольки раз умножиать позицию). Пример ввода: 0 2 3")
                     self.martin_gale_redirect_flag = True
                 else:
                     self.bot.send_message(message.chat.id, "Нажмите START для верификации")
@@ -185,7 +185,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
             def handle_indicators_redirect(message):
                 # self.last_message = message
                 self.indicators_redirect_flag = False
-                self.indicators_strategy_number = int(float(message.text.split(' ')))
+                self.indicators_strategy_number = int(float(message.text.strip()))
                 self.ema_settings()
                 self.bot.send_message(message.chat.id, f"Текущий номер стратегии индикатора: {self.indicators_strategy_number}")
 

@@ -41,7 +41,14 @@ class TEMPLATES(INFO):
             # Выводим торговые данные
             trade_data_mess = f"Основные торговые данные:\nМонета: {self.symbol}\nРазмер ставки: {self.depo}\nКредитное плечо: {self.lev_size}"
             self.handle_messagee(trade_data_mess)
-            trade_params_mess = f"Текущие параметры стратегии:\nСтратегия индикатора: {self.indicators_strategy_text_patterns[f"{self.indicators_strategy_number}"]}\nСтратегия TP/SL: {self.stop_loss_global_type_text_patterns[f"{self.stop_loss_global_type}"]}\nСпособ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode_text_patterns[f"{self.stop_loss_ratio_mode}"]}\nСоотношение риска к прибыли (только для фиксированного типа стоп лосса): {self.risk_reward_ratio}"
+            trade_params_mess = (
+                f"Текущие параметры стратегии:\n"
+                f"Стратегия индикатора: {self.indicators_strategy_text_patterns[f'{self.indicators_strategy_number}']}\n"
+                f"Стратегия TP/SL: {self.stop_loss_global_type_text_patterns[f'{self.stop_loss_global_type}']}\n"
+                f"Способ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode_text_patterns[f'{self.stop_loss_ratio_mode}']}\n"
+                f"Соотношение риска к прибыли (только для фиксированного типа стоп лосса): {self.risk_reward_ratio}"
+            )
+
             self.handle_messagee(trade_params_mess)
 
         except Exception as ex:

@@ -18,7 +18,7 @@ class TG_CONNECTOR(PARAMS):
         button2 = types.KeyboardButton("GO")
         button3 = types.KeyboardButton("STOP")
         button4 = types.KeyboardButton("SEARCH_COINS")
-        button5 = types.KeyboardButton("SETTINGS")  
+        button5 = types.KeyboardButton("TRADES_DATA")  
         button6 = types.KeyboardButton("INDICATORS")
         button7 = types.KeyboardButton("TP/SL")
         button8 = types.KeyboardButton("MARTIN_GALE")
