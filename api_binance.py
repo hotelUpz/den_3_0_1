@@ -1,5 +1,4 @@
 from log import Total_Logger
-from SETTINGS import is_proxies_true
 import time
 import pandas as pd
 import hmac
@@ -65,7 +64,7 @@ class BINANCE_API(Total_Logger):
 
         for i in range(2):
             try:
-                if not is_proxies_true:
+                if not self.is_proxies_true:
                     kwargs.pop('proxies', None)
 
                 response = requests.request(url=url, **kwargs)
@@ -142,7 +141,7 @@ class BINANCE_API(Total_Logger):
             self.positions_url, 
             headers=self.headers, 
             params=params, 
-            proxies=self.proxiess if is_proxies_true else None
+            proxies=self.proxiess if self.is_proxies_true else None
         )
         if positions.status_code == 200:    
             positions = positions.json()                        
