@@ -7,6 +7,7 @@ class PARAMS(SETTINGSS):
     def __init__(self) -> None:
         super().__init__()
         # print("init VARIABLES")
+        self.market_place = 'binance'
         self.default_tg_vars() 
         self.init_all_params()
 
