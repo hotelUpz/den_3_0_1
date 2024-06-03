@@ -110,7 +110,7 @@ class MAIN_CONTROLLER(ENGINS):
         self.intradaction_templates()
         martin_gale_status = "включен" if self.martin_gale_flag else "отключен"
         self.handle_messagee(f"Мартин Гейл {martin_gale_status}") 
-        if self.max_martin_gale_counter_auto_true:
+        if self.martin_gale_flag and self.max_martin_gale_counter_auto_true:
             self.is_martin_gale_true_template()
 
         while True:

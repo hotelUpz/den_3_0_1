@@ -23,6 +23,8 @@ class PARAMS(SETTINGSS):
             '4': 'ema_crossover + stoch_rsi_overTrade',
             '5': 'ema_crossover + stoch_rsi_overTrade + trend_line',
             '6': 'smart_random + trend_line',
+            '7': 'trading_view_ind',
+            '8': 'trading_view_ind + trend_line',
         }
 
         self.stop_loss_global_type_text_patterns = {
