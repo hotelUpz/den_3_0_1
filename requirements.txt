@@ -1,0 +1,14 @@
+pandas
+pandas-ta
+python-dotenv
+pyTelegramBotAPI
+requests
+aiohttp
+tradingview-ta
+# pip install pandas
+# pip install pandas-ta
+# pip install pyTelegramBotAPI
+# pip install python-dotenv
+# pip install requests
+# pip install aiohttp
+# pip install tradingview-ta
