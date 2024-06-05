@@ -6,10 +6,10 @@ class SETTINGSS():
     def __init__(self) -> None:
         # print("init SETTINGS")
         self.SOLI_DEO_GLORIA = 'Soli Deo Gloria!' # одному Богу слава!!
-        self.my_name = 'Николай' # Ваше имя
+        self.my_name = 'Денис' # Ваше имя
         self.veryf_attemts_number = 9 # количество попыток доступа в ваш тг бот после неверно введенного пароля
         self.show_statistic_hour = 2 # время показа дневной статистики (21 - в 9 часов вечера каждого дня)
-        self.is_proxies_true = 1 # Использовать прокси. Вкл/Выкл: 1/0
+        self.is_proxies_true = 0 # Использовать прокси. Вкл/Выкл: 1/0
         self.init_main_settings()               
 
     def init_main_settings(self):

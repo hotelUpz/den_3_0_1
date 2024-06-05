@@ -8,6 +8,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
         super().__init__()  
         self.stop_redirect_flag = False  
         self.trades_data_redirect_flag = False
+        self.set_time_frame_flag = False
         self.martin_gale_redirect_flag = False
         self.indicators_redirect_flag = False
         self.tp_sl_redirect_flag = False
@@ -99,28 +100,24 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 else:
                     self.bot.send_message(message.chat.id, "Бот не был остановлен...") 
             # /////////////////////////////////////////////////////////////////////////////// 
-            @self.bot.message_handler(func=lambda message: message.text == 'SEARCH COINS')             
-            def handle_search_coins(message):
-                self.last_message = message
-                candidate_symbols_list = []
+            @self.bot.message_handler(func=lambda message: message.text == 'SET TIME_FRAME')             
+            def handle_set_timeFrame(message):
+                self.last_message = message               
                 if self.seq_control_flag:
-                    candidate_symbols_list = self.get_top_coins_template()
-                    if candidate_symbols_list:
-                        mess_resp = ""
-                        pre_recomend_remark = "Фильтр монет нашел следующие рекомендации:"
-                        # print(pre_recomend_remark)
-                        self.bot.send_message(message.chat.id, pre_recomend_remark)
-                        mess_resp = '\n'.join(candidate_symbols_list)
-                        # print(mess_resp)
-                        self.bot.send_message(message.chat.id, mess_resp)
-                    else:
-                        is_empty_recomend_list_str = "На данный момент нет ни одной рекомендации согласно заданным условиям фильтра"
-                        print(is_empty_recomend_list_str)
-                        self.bot.send_message(message.chat.id, is_empty_recomend_list_str)
-
+                    self.set_time_frame_flag = True
+                    self.bot.send_message(message.chat.id, "Введите таймфрейм. Напиример '5m' или '1h' (без пробелов)")
                 else:
                     self.bot.send_message(message.chat.id, "Нажмите START для верификации")
+
+            @self.bot.message_handler(func=lambda message: self.set_time_frame_flag)             
+            def handle_set_timeFrame(message):
+                self.set_time_frame_flag = False
+                dataa = message.text.strip()
+                self.kline_time = int(float(dataa[:-1]))
+                self.time_frame = dataa[-1]
+                self.interval = str(self.kline_time) + self.time_frame            
             # ////////////////////////////////////////////////////////////////////////////
+            # # ////////////////////////////////////////////////////////////////////////////
             @self.bot.message_handler(func=lambda message: message.text == 'SET DEPO/LEVERAGE')             
             def handle_trades_data(message):
                 self.last_message = message

@@ -8,8 +8,7 @@ class PARAMS(SETTINGSS):
     def __init__(self) -> None:
         super().__init__()
         # print("init VARIABLES")
-        self.symbol = None
-        self.wait_candle_flag = True
+        self.symbol = None        
         self.market_place = 'binance'
         self.default_tg_vars() 
         self.init_some_params()
@@ -67,6 +66,7 @@ class PARAMS(SETTINGSS):
 
     def init_some_params(self):
         # ////////////////////// некоторые переменные:
+        self.wait_candle_flag = True
         self.cur_klines_data = None
         self.direction = None 
         self.was_change_leverage_true = False  
