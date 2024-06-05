@@ -145,10 +145,10 @@ class MAIN_CONTROLLER(ENGINS):
             # time.sleep(5)
             get_coins_counter += 1
             if get_coins_counter == get_coins_counter_reset_until:
-                coins_list = self.get_top_coins_template()
+                candidate_symbols_list = self.get_top_coins_template()
                 get_coins_counter = 0           
 
             if self.stop_loss_global_type in [1,2]:
-                if not self.engin_1_2(coins_list):
+                if not self.engin_1_2(candidate_symbols_list):
                     self.stop_bot_flag = True
                     continue
