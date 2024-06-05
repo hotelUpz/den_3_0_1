@@ -10,7 +10,7 @@ class PARAMS(SETTINGSS):
         # print("init VARIABLES")
         self.symbol = None        
         self.market_place = 'binance'
-        self.default_tg_vars() 
+        self.default_tg_vars()
         self.init_some_params()
         self.init_main_file_variables()
         self.ema_settings()
@@ -69,9 +69,8 @@ class PARAMS(SETTINGSS):
         self.wait_candle_flag = True
         self.cur_klines_data = None
         self.direction = None 
-        self.was_change_leverage_true = False  
-        self.cur_martin_gale_counter = 0  
-        self.last_message = None
+        self.was_change_leverage_true = False
+        self.cur_martin_gale_counter = 0
         #///////////////////////////////////////////////
 
     def ema_settings(self):
@@ -96,6 +95,7 @@ class PARAMS(SETTINGSS):
         self.seq_control_flag = False
         self.stop_redirect_flag = False 
         self.settings_redirect_flag = False
+        self.last_message = None
         
     def init_keys(self): 
         # #////////////////////////////// для деплоя на сервер:

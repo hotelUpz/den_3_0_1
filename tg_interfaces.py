@@ -70,8 +70,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
             # ////////////////////////////////////////////////////////////////////////////
             @self.bot.message_handler(func=lambda message: message.text == 'GO')             
             def handle_go(message):
-                if self.seq_control_flag:
-                    self.last_message = message
+                if self.seq_control_flag:                    
                     if self.run_flag:
                         message.text = self.connector_func(message, "Сперва остановите робота ..")
                     else:                                    
@@ -82,6 +81,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
                         self.run_flag = True
                         self.seq_control_flag = True
                         self.stop_bot_flag = False
+                        self.last_message = message
                         self.main_func()
                 else:
                     self.bot.send_message(message.chat.id, "Нажмите START для верификации")      
