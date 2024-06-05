@@ -110,12 +110,13 @@ class TG_MANAGER(MAIN_CONTROLLER):
                     self.bot.send_message(message.chat.id, "Нажмите START для верификации")
 
             @self.bot.message_handler(func=lambda message: self.set_time_frame_flag)             
-            def handle_set_timeFrame(message):
+            def handle_set_timeFrame_redirect(message):
                 self.set_time_frame_flag = False
                 dataa = message.text.strip()
                 self.kline_time = int(float(dataa[:-1]))
                 self.time_frame = dataa[-1]
-                self.interval = str(self.kline_time) + self.time_frame            
+                self.interval = str(self.kline_time) + self.time_frame   
+                self.bot.send_message(message.chat.id, f"Тайм фрейм изменен и составляет {self.interval}")         
             # ////////////////////////////////////////////////////////////////////////////
             # # ////////////////////////////////////////////////////////////////////////////
             @self.bot.message_handler(func=lambda message: message.text == 'SET DEPO/LEVERAGE')             
