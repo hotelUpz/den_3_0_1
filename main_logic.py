@@ -52,6 +52,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
             if self.current_signal_val:
                 self.is_no_signal_counter = 0
                 # ///////////////// сообщение о сигнале:
+                self.handle_messagee(f"Монета: {self.symbol}")
                 self.handle_messagee(self.current_signal_val)
                 self.last_signal_val = self.current_signal_val
                 self.for_set_open_position_temp()
@@ -99,8 +100,6 @@ class MAIN_CONTROLLER(ENGINS):
         super().__init__()
 
     def main_func(self):
-        self.run_flag = True
-        self.stop_bot_flag = False
         # self.last_date = self.date_of_the_month()  
         trade_params_mess = (
             f"Текущие параметры стратегии:\n"
@@ -128,7 +127,7 @@ class MAIN_CONTROLLER(ENGINS):
             if self.stop_bot_flag:
                 msg = "Bot остановлен!"
                 self.handle_messagee(msg)
-                self.run_flag = False
+                self.run_flag = False                
                 return
             
             if self.wait_candle_flag:
@@ -142,8 +141,6 @@ class MAIN_CONTROLLER(ENGINS):
             else:
                 wait_time = self.time_calibrator(1, self.time_frame) if not self.in_position else 30    
             time.sleep(wait_time)
-            # test:
-            # time.sleep(5)
             get_coins_counter += 1
             if get_coins_counter == get_coins_counter_reset_until:
                 candidate_symbols_list = self.get_top_coins_template()

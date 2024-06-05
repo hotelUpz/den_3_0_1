@@ -12,9 +12,9 @@ class PARAMS(SETTINGSS):
         self.market_place = 'binance'
         self.default_tg_vars() 
         self.init_some_params()
+        self.init_main_file_variables()
         self.ema_settings()
         self.default_statistic_vars()
-        self.init_main_file_variables()
         self.init_keys()
         self.indicators_strategy_text_patterns = {
             '1': 'trading_view_ind',
@@ -87,15 +87,15 @@ class PARAMS(SETTINGSS):
 
     # /////////// переменные... - суто по тех части: ///////////////////////
     def default_tg_vars(self):
-        self.run_flag = 0
-        self.stop_bot_flag = 0          
-        self.block_acess_flag = 0
-        self.start_flag = 0
+        self.run_flag = False
+        self.stop_bot_flag = False         
+        self.block_acess_flag = False
+        self.start_flag = False
         self.start_day_date = None
         self.block_acess_counter = 0
-        self.seq_control_flag = 0
-        self.stop_redirect_flag = 0  
-        self.settings_redirect_flag = 0
+        self.seq_control_flag = False
+        self.stop_redirect_flag = False 
+        self.settings_redirect_flag = False
         
     def init_keys(self): 
         # #////////////////////////////// для деплоя на сервер:

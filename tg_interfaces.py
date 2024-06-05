@@ -38,7 +38,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
 
                     if self.start_day_date != cur_day_date:
                         self.start_day_date = cur_day_date
-                        self.block_acess_flag = False 
+                        self.block_acess_flag = False
                         self.block_acess_counter = 0
 
                     if value_token == self.seq_control_token and not self.block_acess_flag:
@@ -50,7 +50,6 @@ class TG_MANAGER(MAIN_CONTROLLER):
                             if self.run_flag:
                                 message.text = self.connector_func(message, "Сперва остановите робота ..")
                             else:
-                                self.init_some_params() 
                                 message.text = self.connector_func(message, "Здравствуйте! Для начала работы выберите одну из опций.(Начать торговлю нажмите 'GO')")                               
                                 # self.main_func() 
                         except Exception as ex: 
@@ -77,6 +76,12 @@ class TG_MANAGER(MAIN_CONTROLLER):
                         message.text = self.connector_func(message, "Сперва остановите робота ..")
                     else:                                    
                         self.bot.send_message(message.chat.id, f'Да благословит вас Бог {self.my_name}!')
+                        self.default_tg_vars() 
+                        self.init_some_params()
+                        self.init_main_file_variables()
+                        self.run_flag = True
+                        self.seq_control_flag = True
+                        self.stop_bot_flag = False
                         self.main_func()
                 else:
                     self.bot.send_message(message.chat.id, "Нажмите START для верификации")      
@@ -132,9 +137,6 @@ class TG_MANAGER(MAIN_CONTROLLER):
             def handle_trades_data_redirect(message):
                 # self.last_message = message
                 self.trades_data_redirect_flag = False
-                # сбрасываем значения переменных:
-                self.init_some_params() 
-                self.init_main_file_variables()
                 dataa = [x for x in message.text.split(' ') if x and x.strip()]              
                 self.start_depo = self.depo = round(float(dataa[0]), 2)
                 self.lev_size = int(float(dataa[1])) 
