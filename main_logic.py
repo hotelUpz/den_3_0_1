@@ -10,7 +10,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
         # устанавливаем функциии декораторы
         self.engin_1_2 = self.log_exceptions_decorator(self.engin_1_2)
 
-    def engin_1_2(self):
+    def engin_1_2(self, coins_list):
         try:
             if self.is_trailing_stop_start:  
                 if not self.trailing_tp_sl_shell(self.executed_qty, self.enter_price, self.stop_loss_ratio, self.price_precession, self.last_signal_val):
@@ -20,6 +20,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 self.in_position = False
                 self.is_trailing_stop_start = False
                 self.last_signal_val = None
+                self.wait_candle_flag = True
                 return True      
             # /////////////// проверка открыта ли позиция:
             if self.in_position:
@@ -31,19 +32,14 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                         self.last_signal_val
                     )
                     self.last_signal_val = None
+                    self.wait_candle_flag = True
                     msg = "Бот ищет следующий сигнал"
                     self.handle_messagee(msg)
                     return True
             else:                            
                 # ////////////// ищем сигнал если закрыта:
-                self.cur_klines_data = self.get_klines(self.symbol, self.interval, self.ema_trend_line)                 
-                self.current_signal_val = self.get_signals(
-                    self.indicators_strategy_list,
-                    self.cur_klines_data, self.ema1_period,
-                    self.ema2_period,
-                    self.ema_trend_line,
-                    self.stoch_rsi_over_sell, self.stoch_rsi_over_buy
-                )
+                self.symbol, self.current_signal_val, self.cur_price,  self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period)               
+           
                 if not self.current_signal_val:
                     self.is_no_signal_counter += 1
                     if self.is_no_signal_counter % self.show_absent_or_signal_every == 0:
@@ -105,13 +101,22 @@ class MAIN_CONTROLLER(ENGINS):
     def main_func(self):
         self.run_flag = True
         self.stop_bot_flag = False
-        first_iter_flag = True
-        self.last_date = self.date_of_the_month()
-        self.intradaction_templates()
+        # self.last_date = self.date_of_the_month()  
+        trade_params_mess = (
+            f"Текущие параметры стратегии:\n"
+            f"Стратегия индикатора: {self.indicators_strategy_text_patterns[f'{self.indicators_strategy_number}']}\n"
+            f"Стратегия TP/SL: {self.stop_loss_global_type_text_patterns[f'{self.stop_loss_global_type}']}\n"
+            f"Способ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode_text_patterns[f'{self.stop_loss_ratio_mode}']}\n"
+            f"Значение статического стоп лосс коэффициента: {self.static_stop_loss_ratio_val}\n"
+            f"Соотношение риска к прибыли (только для фиксированного типа стоп лосса): {self.risk_reward_ratio}"
+        )
+        self.handle_messagee(trade_params_mess)      
         martin_gale_status = "включен" if self.martin_gale_flag else "отключен"
         self.handle_messagee(f"Мартин Гейл {martin_gale_status}") 
         if self.martin_gale_flag and self.max_martin_gale_counter_auto_true:
             self.is_martin_gale_true_template()
+        get_coins_counter = 0
+        get_coins_counter_reset_until = 30
 
         while True:
 
@@ -124,18 +129,26 @@ class MAIN_CONTROLLER(ENGINS):
                 self.handle_messagee(msg)
                 self.run_flag = False
                 return
-
-            time_arg = 1
-            if first_iter_flag:
-                first_iter_flag = False
-                msg = "Бот ищет сигнал для входа в позицию. Процесс поиска может занять неопределенное время. Хорошего вам дня!"
+            
+            if self.wait_candle_flag:
+                self.wait_candle_flag = False
+                wait_time = self.time_calibrator(self.kline_time, self.time_frame)
+                msg = f"Ждем закрытия последней {self.interval} свечи. Осталось {round(wait_time/60, 2)} минут"
                 self.handle_messagee(msg)
-                time_arg = self.kline_time
-            wait_time = self.time_calibrator(time_arg, self.time_frame) if not self.in_position else 30    
+                candidate_symbols_list = self.get_top_coins_template()
+                mess_resp = 'Список монет кандидатов:\n' + '\n'.join(candidate_symbols_list)
+                self.handle_messagee(mess_resp)
+            else:
+                wait_time = self.time_calibrator(1, self.time_frame) if not self.in_position else 30    
             time.sleep(wait_time)
+            # test:
             # time.sleep(5)
+            get_coins_counter += 1
+            if get_coins_counter == get_coins_counter_reset_until:
+                coins_list = self.get_top_coins_template()
+                get_coins_counter = 0           
 
             if self.stop_loss_global_type in [1,2]:
-                if not self.engin_1_2():
+                if not self.engin_1_2(coins_list):
                     self.stop_bot_flag = True
                     continue

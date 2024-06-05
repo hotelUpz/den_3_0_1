@@ -121,11 +121,11 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 else:
                     self.bot.send_message(message.chat.id, "Нажмите START для верификации")
             # ////////////////////////////////////////////////////////////////////////////
-            @self.bot.message_handler(func=lambda message: message.text == 'SET TRADE')             
+            @self.bot.message_handler(func=lambda message: message.text == 'SET DEPO/LEVERAGE')             
             def handle_trades_data(message):
                 self.last_message = message
                 if self.seq_control_flag:
-                    self.bot.send_message(message.chat.id, "Введите торговую пару, размер депозита (в usdt) и кредитное плечо. Например: btcusdt 20 2")
+                    self.bot.send_message(message.chat.id, "Введите размер депозита (в usdt) и кредитное плечо. Например: 20 2")
                     self.trades_data_redirect_flag = True
                 else:
                     self.bot.send_message(message.chat.id, "Нажмите START для верификации")
@@ -137,11 +137,9 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 # сбрасываем значения переменных:
                 self.init_some_params() 
                 self.init_main_file_variables()
-                dataa = [x for x in message.text.split(' ') if x and x.strip()]
-                self.symbol = dataa[0].upper()  
-                self.start_depo = self.depo = round(float(dataa[1]), 2)
-                self.lev_size = int(float(dataa[2])) 
-                self.bot.send_message(message.chat.id, f"Текущая торговая пара: {self.symbol}")
+                dataa = [x for x in message.text.split(' ') if x and x.strip()]              
+                self.start_depo = self.depo = round(float(dataa[0]), 2)
+                self.lev_size = int(float(dataa[1])) 
                 self.bot.send_message(message.chat.id, f"Текущий депозит: {self.depo}")
                 if self.set_leverage_template():
                     self.bot.send_message(message.chat.id, f"Текущее кредитное плечо: {self.lev_size}")                    

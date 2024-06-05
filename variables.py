@@ -8,7 +8,8 @@ class PARAMS(SETTINGSS):
     def __init__(self) -> None:
         super().__init__()
         # print("init VARIABLES")
-        self.symbol = self.symbol.upper()
+        self.symbol = None
+        self.wait_candle_flag = True
         self.market_place = 'binance'
         self.default_tg_vars() 
         self.init_some_params()
@@ -17,14 +18,8 @@ class PARAMS(SETTINGSS):
         self.init_main_file_variables()
         self.init_keys()
         self.indicators_strategy_text_patterns = {
-            '1': 'ema_crossover',
-            '2': 'ema_crossover + trend_line',
-            '3': 'ema_crossover + stoch_rsi_crossover',
-            '4': 'ema_crossover + stoch_rsi_overTrade',
-            '5': 'ema_crossover + stoch_rsi_overTrade + trend_line',
-            '6': 'smart_random + trend_line',
-            '7': 'trading_view_ind',
-            '8': 'trading_view_ind + trend_line',
+            '1': 'trading_view_ind',
+            '2': 'trading_view_ind + trend_line',
         }
 
         self.stop_loss_global_type_text_patterns = {
@@ -82,7 +77,7 @@ class PARAMS(SETTINGSS):
     def ema_settings(self):
         self.interval = str(self.kline_time) + self.time_frame
         self.max_period = max(self.ema1_period, self.ema2_period)
-        self.indicators_strategy_list_list = [['ema_crossover'], ['ema_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_crossover'], ['ema_crossover', 'stoch_rsi_overTrade'], ['ema_crossover', 'stoch_rsi_overTrade', 'trend_line'], ['trend_line', 'smart_random'], ['trading_view_ind'], ['trading_view_ind', 'trend_line']]
+        self.indicators_strategy_list_list = [['trading_view_ind'], ['trading_view_ind', 'trend_line']]
         self.indicators_strategy_list = self.indicators_strategy_list_list[self.indicators_strategy_number - 1]
 
     def default_statistic_vars(self):        
