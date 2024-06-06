@@ -62,11 +62,9 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     msg = "Размер депозита для данной монеты слишком мал. Ищем другую монету"
                     self.handle_messagee(msg)
                     self.black_coins_list(self.symbol)
-                    # /////// логика остановки бота на случай если зазмер депозита слишком мал:
                     return 2
                 
                 if not self.make_orders_template_shell():
-                    # /////// логика остановки бота на случай если не удалось нормально открыть позицию:
                     return 2
                 # //////////// вычисляем стопы:
                 self.enter_price, self.executed_qty = self.for_set_stops_orders_temp(self.response_trading_list, self.qty, self.cur_price)
@@ -152,5 +150,4 @@ class MAIN_CONTROLLER(ENGINS):
             if self.stop_loss_global_type in [1,2]:
                 engin_answ = not self.engin_1_2(candidate_symbols_list)
                 if not engin_answ:
-                    self.stop_bot_flag = True
-                    continue
+                    self.stop_bot_flag = True               
