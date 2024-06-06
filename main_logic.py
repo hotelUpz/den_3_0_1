@@ -147,6 +147,7 @@ class MAIN_CONTROLLER(ENGINS):
                 get_coins_counter = 0           
 
             if self.stop_loss_global_type in [1,2]:
+                candidate_symbols_list = [x for x in candidate_symbols_list if x not in self.black_coins_list]
                 if candidate_symbols_list:
                     engin_answ = self.engin_1_2(candidate_symbols_list)
                     if not engin_answ:
