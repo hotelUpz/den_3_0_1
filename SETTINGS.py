@@ -1,6 +1,6 @@
 import math
 
-is_terminal_only = 0
+is_terminal_only = 1
 #
 class SETTINGSS():
     def __init__(self) -> None:
@@ -22,7 +22,7 @@ class SETTINGSS():
 
         # /////////////////////////////////////////////////////////////
         # //////////////////////////// НАСТРОЙКИ ИНДИКАТОРА:
-        self.kline_time, self.time_frame = 1, 'h' # таймфрейм где челое число - период, а буква - сам тайм фрейм (минута, час и т.д (m, h))
+        self.kline_time, self.time_frame = 1, 'm' # таймфрейм где челое число - период, а буква - сам тайм фрейм (минута, час и т.д (m, h))
         self.indicators_strategy_number = 2 # номер стратегии индикаторов
         # 1 - 'trading_view_ind' # индикатор трейдинг вью
         # 2 - 'trading_view_ind + trend_line' # индикатор трейдинг вью + ориентироваться на линию тренда

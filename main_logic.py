@@ -5,7 +5,7 @@ import inspect
 current_file = os.path.basename(__file__)
 
 class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
-    def __init__(self):  
+    def __init__(self):
         super().__init__()
         # устанавливаем функциии декораторы
         self.engin_1_2 = self.log_exceptions_decorator(self.engin_1_2)
@@ -39,8 +39,6 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
             else:                            
                 # ////////////// ищем сигнал если закрыта:
                 self.symbol, self.current_signal_val, self.cur_price,  self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period)               
-                if self.symbol in self.black_coins_list:
-                    return 2
                 if not self.current_signal_val:
                     self.is_no_signal_counter += 1
                     if self.is_no_signal_counter % self.show_absent_or_signal_every == 0:
@@ -65,6 +63,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     return 2
                 
                 if not self.make_orders_template_shell():
+                    self.black_coins_list(self.symbol)
                     return 2
                 # //////////// вычисляем стопы:
                 self.enter_price, self.executed_qty = self.for_set_stops_orders_temp(self.response_trading_list, self.qty, self.cur_price)
@@ -80,7 +79,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     # ////////////
                     if not self.in_position:
                         # /////// логика остановки бота на случай если не удалось нормально установить стопы:
-                        msg = "Что-то пошло не так... закройте позицию вручную!!"
+                        msg = "Не удалось установить стопы... закройте позицию вручную!!"
                         self.handle_messagee(msg)
                         return False
                 # /////////////
@@ -88,11 +87,9 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 self.current_signal_val = None
                 if self.stop_loss_global_type == 1:
                     self.is_trailing_stop_start = True # -- флаг входа в трейлинг стоп
-
             return True
         except Exception as ex:                   
             self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
-
         return False
     
 class MAIN_CONTROLLER(ENGINS):
@@ -100,7 +97,9 @@ class MAIN_CONTROLLER(ENGINS):
         super().__init__()
 
     def main_func(self):
-        # self.last_date = self.date_of_the_month()  
+        # self.last_date = self.date_of_the_month() 
+        candidate_symbols_list  = []
+        empty_candidate_list_counter = 0
         engin_answ = None
         trade_params_mess = (
             f"Текущие параметры стратегии:\n"
@@ -148,6 +147,13 @@ class MAIN_CONTROLLER(ENGINS):
                 get_coins_counter = 0           
 
             if self.stop_loss_global_type in [1,2]:
-                engin_answ = not self.engin_1_2(candidate_symbols_list)
-                if not engin_answ:
-                    self.stop_bot_flag = True               
+                if candidate_symbols_list:
+                    engin_answ = self.engin_1_2(candidate_symbols_list)
+                    if not engin_answ:
+                        self.stop_bot_flag = True
+                else:
+                    empty_candidate_list_counter += 1 
+                if empty_candidate_list_counter == 30:
+                    self.handle_messagee("Список монет кандидатов пуст на протяжение 30 попыток поиска...")
+                    empty_candidate_list_counter = 0
+
