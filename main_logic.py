@@ -39,7 +39,8 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
             else:                            
                 # ////////////// ищем сигнал если закрыта:
                 self.symbol, self.current_signal_val, self.cur_price,  self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period)               
-           
+                if self.symbol in self.black_coins_list:
+                    return 2
                 if not self.current_signal_val:
                     self.is_no_signal_counter += 1
                     if self.is_no_signal_counter % self.show_absent_or_signal_every == 0:
@@ -58,10 +59,11 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 self.for_set_open_position_temp()
                                         
                 if self.qty == "Too_litle_size":
-                    msg = "Размер депозита для данной монеты слишком мал. Выберите другие опции и попробуйте еще раз..."
+                    msg = "Размер депозита для данной монеты слишком мал. Ищем другую монету"
                     self.handle_messagee(msg)
+                    self.black_coins_list(self.symbol)
                     # /////// логика остановки бота на случай если зазмер депозита слишком мал:
-                    return False
+                    return 2
                 
                 if not self.make_orders_template_shell():
                     # /////// логика остановки бота на случай если не удалось нормально открыть позицию:
@@ -101,6 +103,7 @@ class MAIN_CONTROLLER(ENGINS):
 
     def main_func(self):
         # self.last_date = self.date_of_the_month()  
+        engin_answ = None
         trade_params_mess = (
             f"Текущие параметры стратегии:\n"
             f"Стратегия индикатора: {self.indicators_strategy_text_patterns[f'{self.indicators_strategy_number}']}\n"
@@ -136,8 +139,8 @@ class MAIN_CONTROLLER(ENGINS):
                 msg = f"Ждем закрытия последней {self.interval} свечи. Осталось {round(wait_time/60, 2)} минут"
                 self.handle_messagee(msg)
                 candidate_symbols_list = self.get_top_coins_template()
-                mess_resp = 'Список монет кандидатов:\n' + '\n'.join(candidate_symbols_list)
-                self.handle_messagee(mess_resp)
+                # mess_resp = 'Список монет кандидатов:\n' + '\n'.join(candidate_symbols_list)
+                # self.handle_messagee(mess_resp)
             else:
                 wait_time = self.time_calibrator(1, self.time_frame) if not self.in_position else 30    
             time.sleep(wait_time)
@@ -147,6 +150,7 @@ class MAIN_CONTROLLER(ENGINS):
                 get_coins_counter = 0           
 
             if self.stop_loss_global_type in [1,2]:
-                if not self.engin_1_2(candidate_symbols_list):
+                engin_answ = not self.engin_1_2(candidate_symbols_list)
+                if not engin_answ:
                     self.stop_bot_flag = True
                     continue
