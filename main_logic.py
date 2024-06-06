@@ -67,7 +67,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 
                 if not self.make_orders_template_shell():
                     # /////// логика остановки бота на случай если не удалось нормально открыть позицию:
-                    return False
+                    return 2
                 # //////////// вычисляем стопы:
                 self.enter_price, self.executed_qty = self.for_set_stops_orders_temp(self.response_trading_list, self.qty, self.cur_price)
                 self.stop_loss_ratio = self.calculate_stop_loss_ratio(
