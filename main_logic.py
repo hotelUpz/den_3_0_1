@@ -49,14 +49,12 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 # delta_time = int((int(time.time()*1000) - start_time)/ 1000)
                 # print(f"конец поиска сигнала: {delta_time} сек")             
                 if not self.current_signal_val:                    
-                    self.handle_messagee("нет сигнала")
+                    # self.handle_messagee("нет сигнала")
                     self.is_no_signal_counter += 1
                     if self.is_no_signal_counter % self.show_absent_or_signal_every == 0:
                         msg = f"Нет сигнала на протяжение {self.is_no_signal_counter} минут"
-                        self.handle_messagee(msg)
-            # ////////////// отчет суточной статистики:                
-            # self.show_statustik()
-            # ///////////                
+                        self.handle_messagee(msg)  
+             
             # //////////////// анализ сигнала:
             if self.current_signal_val:
                 self.is_no_signal_counter = 0
@@ -145,6 +143,7 @@ class MAIN_CONTROLLER(ENGINS):
                 self.run_flag = False                
                 return
             
+            # ////////////// отчет суточной статистики: 
             is_show_statistic_true, next_show_statistic_time = self.show_statistic_signal(next_show_statistic_time)
             if is_show_statistic_true:
                 result_string = ""

@@ -12,6 +12,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
         self.martin_gale_redirect_flag = False
         self.indicators_redirect_flag = False
         self.tp_sl_redirect_flag = False
+        self.add_in_dlack_list_flag = False
         self.documentation_redirect_flag = False
 
     def run(self):  
@@ -207,6 +208,27 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 self.static_stop_loss_ratio_val = float(dataa[2])
                 self.risk_reward_ratio = dataa[3]
                 self.bot.send_message(message.chat.id, "Настройки стоп лосс стратегии применены успешно!")  
+
+            # ////////////////////////////////////////////////////////////////////////////
+            @self.bot.message_handler(func=lambda message: message.text == 'ADD IN BLACK LIST')             
+            def handle_add_in_dlack_list(message):
+                self.last_message = message
+                if self.seq_control_flag:
+                    if self.run_flag:                            
+                        self.bot.send_message(message.chat.id, "Введите монету которую хотите внести в черный список. Напиример etcusdt")
+                        self.add_in_dlack_list_flag = True
+                    else:
+                        message.text = self.connector_func(message, "Сперва запустите робота командой 'GO'")                   
+                else:
+                    self.bot.send_message(message.chat.id, "Нажмите START для верификации")
+
+            @self.bot.message_handler(func=lambda message: self.add_in_dlack_list_flag)             
+            def handle_add_in_dlack_list_redirect(message):
+                self.add_in_dlack_list_flag = False
+                black_coin = None
+                black_coin = message.text.strip().upper()
+                self.black_coins_list.append(black_coin)
+                self.bot.send_message(message.chat.id, f"Монета {black_coin} была добавлена в черный список. Текущий черный список: {self.black_coins_list}")
 
             # ////////////////////////////////////////////////////////////////////////////
             @self.bot.message_handler(func=lambda message: message.text == 'DOCUMENTATION')             

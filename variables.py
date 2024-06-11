@@ -78,6 +78,7 @@ class PARAMS(SETTINGSS):
         self.direction = None 
         self.was_change_leverage_true = False
         self.cur_martin_gale_counter = 0
+        self.black_coins_list = self.default_black_coins_list
         #///////////////////////////////////////////////
 
     def ema_settings(self):
