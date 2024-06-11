@@ -174,6 +174,7 @@ class INDICATORS_STRATEGYY(INDICATORS):
                     if 'stoch_rsi_overTrade' in strategy_list:
                         df = self.calculate_stoch_rsi(df)
                         stoch_rsi_overTrade_defender_val = stoch_rsi_overTrade_defender(df)
+                        print(stoch_rsi_overTrade_defender_val)
                         if stoch_rsi_overTrade_defender_val == "L":
                             signals_assum += 1
                         elif stoch_rsi_overTrade_defender_val == "S":

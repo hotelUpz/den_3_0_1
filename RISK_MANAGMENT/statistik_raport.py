@@ -45,7 +45,7 @@ class STATISTIC(MARTIN_GALE):
   
     def statistic_calculations(self, daily_trade_history_list, symbol):
         result_statistic_dict = {}
-        result_statistic_dict["symbol"] = symbol
+        # result_statistic_dict["symbol"] = symbol
         win_to_loss_statistik = "0:0"
         max_profit_abs = 0
         max_loss_abs = 0

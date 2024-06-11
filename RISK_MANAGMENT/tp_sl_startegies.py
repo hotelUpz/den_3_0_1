@@ -48,9 +48,11 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
         # print(cancel_all_open_orders_replay)
         log_file = self.get_logs()
         if log_file is None:
-            self.handle_messagee("Нет ошибок на текущий момент")
+            pass
+            # self.handle_messagee("Нет ошибок на текущий момент")
         else:
             if self.last_message:
+                self.handle_messagee("Данный цикл торговли отработал со следующими ошибками:")
                 self.bot.send_document(self.last_message.chat.id, log_file)            
 
         # //////////// show statistic: ///////////////////////////////

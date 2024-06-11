@@ -41,7 +41,10 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 # start_time = int(time.time()*1000)
                 # print("начало поиска сигнала")
                 # print(f"coins_list_len: {len(coins_list)}")
-                self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy) 
+                try:
+                    self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy)
+                except Exception as ex:                   
+                    self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
                 # delta_time = int((int(time.time()*1000) - start_time)/ 1000)
                 # print(f"конец поиска сигнала: {delta_time} сек")             
                 if not self.current_signal_val:                    
@@ -126,6 +129,8 @@ class MAIN_CONTROLLER(ENGINS):
             self.is_martin_gale_true_template()
         get_coins_counter = 0
         get_coins_counter_reset_until = 30
+        is_show_statistic_true, next_show_statistic_time = None, None
+        next_show_statistic_time = self.get_next_show_statistic_time()
 
         while True:
 
@@ -139,6 +144,16 @@ class MAIN_CONTROLLER(ENGINS):
                 self.run_flag = False                
                 return
             
+            is_show_statistic_true, next_show_statistic_time = self.show_statistic_signal(next_show_statistic_time)
+            if is_show_statistic_true:
+                result_string = ""
+                result_string = self.statistic_calculations(self.daily_trade_history_list)
+                if result_string:
+                    self.handle_messagee(f"Показатели торгов за сутки:\n{result_string}")                    
+                else:
+                    self.handle_messagee("Нет данных для показа статистики")
+                self.daily_trade_history_list = []
+
             if self.wait_candle_flag:
                 self.wait_candle_flag = False
                 wait_time = self.time_calibrator(self.kline_time, self.time_frame)
@@ -160,7 +175,6 @@ class MAIN_CONTROLLER(ENGINS):
                 if candidate_symbols_list:
                     engin_answ = self.engin_1_2(candidate_symbols_list)
                     if not engin_answ:
-                        # print("hksfvsfhkd")
                         self.stop_bot_flag = True
                         continue
                 else:

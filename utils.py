@@ -1,6 +1,6 @@
 import requests
 import time
-from datetime import datetime as dttm, time as timm
+from datetime import datetime as dttm, time as timm, timedelta as tmdl
 # from random import choice
 import math
 import decimal
@@ -161,3 +161,19 @@ class UTILS(COInN_FILTERR):
             normal_list.append(format(x_f, 'f'))        
         normal_view = ', '.join(normal_list)
         self.handle_messagee(normal_view)
+
+    # # /////////////////////////////////////////////////////////////
+    def get_next_show_statistic_time(self):
+        current_time = dttm.now()
+        target_time = current_time.replace(hour=self.show_statistic_hour, minute=0, second=0)
+        if current_time >= target_time:            
+            target_time += tmdl(days=1)        
+        return target_time
+    
+    def show_statistic_signal(self, target_time): 
+        now_time = dttm.now()      
+        if now_time >= target_time:
+            target_time = self.get_next_show_statistic_time()             
+            return True, target_time          
+        return False, target_time
+    # # /////////////////////////////////////////////////////////////
