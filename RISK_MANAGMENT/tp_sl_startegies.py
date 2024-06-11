@@ -22,7 +22,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
 
             1. STATIC: Применяет фиксированное значение стоп-лосса.
 
-            2. VOLATILITY_TOTAL_PERIOD: Расчитывает коэффициент стоп-лосса на основе среднего истинного диапазона (ATR) за период, равный половине количества свечей плюс одна свеча.
+            2. VOLATILITY_PERIOD_20: Расчитывает коэффициент стоп-лосса на основе среднего истинного диапазона (ATR) за период = 20 свечей.
 
             3. LAST_VOLATILITY: Использует максимальное отклонение закрытия второй с конца свечи от её минимума или максимума.
 
@@ -32,7 +32,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
 
             6. LAST_MINIMUM: Если позиция длинная (direction = 1), используется разница между закрытием-открытием и минимумом второй с конца свечи; если короткая (direction = -1), используется разница между закрытием-открфтием и максимумом второй с конца свечи.
                 
-            7. ABSOLUTE_MIN: Для длинной позиции рассчитывается разница между ценой входа и абсолютным минимумом всех свечей всего периода; для короткой позиции - между ценой входа и абсолютным максимумом всех свечей. Если минимум/максимум выходит за пределы цены входа, возвращается фиксированное значение стоп-лосса.
+            7. ABSOLUTE_MIN: Для длинной позиции рассчитывается разница между ценой входа и абсолютным минимумом свечей периода 20; для короткой позиции - между ценой входа и абсолютным максимумом свечей. Если минимум/максимум выходит за пределы цены входа, возвращается фиксированное значение стоп-лосса.
         """
     def tp_sl_strategies_documenttion(self):
         """
@@ -70,27 +70,20 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             self.depo, self.cur_martin_gale_counter = self.martin_gale_prosess_handler(last_win_los, self.start_depo, self.depo, self.cur_martin_gale_counter, self.max_martin_gale_counter, self.martin_gale_ratio)
 
 # /////////////// SL RATIO CALCULATIONS:
-    def calculate_stop_loss_ratio(self, direction, enter_price, candles_df, stop_loss_ratio_mode, static_stop_loss_ratio_val, min_default_ratio):
-        # print(direction, enter_price, candles_df, stop_loss_ratio_mode, static_stop_loss_ratio_val/ 100, min_default_ratio/ 100)
-        # /////////////////////////////////////////////////////
+    def calculate_stop_loss_ratio(self, direction, enter_price, candles_df, stop_loss_ratio_mode, static_stop_loss_ratio_val, min_default_ratio, max_default_ratio):
         if enter_price == 0:
-            return
-        
+            return        
         # 1. STATIC: Возвращает фиксированное значение стоп-лосса, заданное параметром static_stop_loss_ratio_val
         if stop_loss_ratio_mode == 1:
-            # print(static_stop_loss_ratio_val/ 100)
-
             return static_stop_loss_ratio_val/ 100
         
         stop_loss_ratio = None
         min_default_ratio = min_default_ratio/ 100
-        period = int(candles_df.shape[0]/ 2.5) + 1
-            
+        # period = int(candles_df.shape[0]/ 2.5) + 1            
         # 2. VOLATILITY_TOTAL_PERIOD: Расчитывает коэффициент стоп-лосса на основе среднего истинного диапазона (ATR) за период, равный половине количества свечей в candles_df, плюс одна свеча
         if stop_loss_ratio_mode == 2:
-            atr_period = period 
             # atr_period = int(candles_df.shape[0]) - 1
-            _, atr_value  = self.calculate_atr(candles_df, atr_period)
+            _, atr_value  = self.calculate_atr(candles_df, 20)
             stop_loss_ratio = atr_value / enter_price
 
         # 3. LAST_VOLATILITY: Использует максимальное отклонение закрытия второй с конца свечи от её минимума или максимума
@@ -121,24 +114,29 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                 # print(f"last_max: {last_max}")           
             stop_loss_ratio = last_min / enter_price
 
-        # 7. ABSOLUTE_MIN: Для длинной позиции рассчитывается разница между ценой входа и абсолютным минимумом всех свечей всего периода; для короткой позиции - между ценой входа и абсолютным максимумом всех свечей. Если минимум/максимум выходит за пределы цены входа, возвращается фиксированное значение стоп-лосса
-        if stop_loss_ratio_mode == 7:            
-            if direction == 1:
-                absolute_min = candles_df['Low'].min()
+        # 7. ABSOLUTE_MIN: Для длинной позиции рассчитывается разница между ценой входа и абсолютным минимумом свечей периода 20; для короткой позиции - между ценой входа и абсолютным максимумом. Если минимум/максимум выходит за пределы цены входа, возвращается фиксированное значение стоп-лосса
+        if stop_loss_ratio_mode == 7:   
+            last_20_candles = candles_df.iloc[-20:]         
+            if direction == 1:                
+                absolute_min = last_20_candles['Low'].min()
                 if absolute_min >= enter_price:
                     return min_default_ratio
                 else:
-                    stop_loss_ratio = ((enter_price - absolute_min) / enter_price)* 0.9
+                    stop_loss_ratio = (enter_price - absolute_min) / enter_price
             elif direction == -1:
-                absolute_max = candles_df['High'].max()
+                absolute_max = last_20_candles['High'].max()
                 if absolute_max <= enter_price:
                     return min_default_ratio
                 else:
-                    stop_loss_ratio = (abs(enter_price - absolute_max) / enter_price)* 0.9
+                    stop_loss_ratio = abs(enter_price - absolute_max) / enter_price
 
-        if stop_loss_ratio is not None and stop_loss_ratio < min_default_ratio:
-            self.handle_messagee(f"stop_loss_ratio < {min_default_ratio}: {stop_loss_ratio < min_default_ratio}") 
-            return min_default_ratio
+        if stop_loss_ratio is not None:
+            if stop_loss_ratio <= min_default_ratio:
+                self.handle_messagee(f"stop_loss_ratio < {min_default_ratio}: {stop_loss_ratio <= min_default_ratio}") 
+                return min_default_ratio
+            elif stop_loss_ratio >= max_default_ratio:
+                self.handle_messagee(f"stop_loss_ratio > {max_default_ratio}: {stop_loss_ratio >= max_default_ratio}") 
+                return max_default_ratio
         
         return stop_loss_ratio
     

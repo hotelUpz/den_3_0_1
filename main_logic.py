@@ -38,8 +38,14 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     return True
             else:                            
                 # ////////////// ищем сигнал если закрыта:
-                self.symbol, self.current_signal_val, self.cur_price,  self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period)               
+                start_time = int(time.time()*1000)
+                print("начало поиска сигнала")
+                print(f"coins_list_len: {len(coins_list)}")
+                self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy) 
+                delta_time = int((int(time.time()*1000) - start_time)/ 1000)
+                print(f"конец поиска сигнала: {delta_time} сек")             
                 if not self.current_signal_val:
+                    print("нет сигнала")
                     self.is_no_signal_counter += 1
                     if self.is_no_signal_counter % self.show_absent_or_signal_every == 0:
                         msg = f"Нет сигнала на протяжение {self.is_no_signal_counter} минут"
@@ -59,18 +65,20 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 if self.qty == "Too_litle_size":
                     msg = "Размер депозита для данной монеты слишком мал. Ищем другую монету"
                     self.handle_messagee(msg)
-                    self.black_coins_list(self.symbol)
+                    self.black_coins_list.append(self.symbol)
+                    self.wait_candle_flag = True
                     return 2
                 
                 if not self.make_orders_template_shell():
-                    self.black_coins_list(self.symbol)
+                    self.black_coins_list.append(self.symbol)
+                    self.wait_candle_flag = True
                     return 2
                 # //////////// вычисляем стопы:
                 self.enter_price, self.executed_qty = self.for_set_stops_orders_temp(self.response_trading_list, self.qty, self.cur_price)
                 self.stop_loss_ratio = self.calculate_stop_loss_ratio(
                     self.direction, self.enter_price, self.cur_klines_data,
                     self.stop_loss_ratio_mode, self.static_stop_loss_ratio_val,
-                    self.min_default_ratio
+                    self.min_default_ratio, self.max_default_ratio
                 )
 
                 self.handle_messagee(f"стоп лосс коэффициент: {self.stop_loss_ratio}")
@@ -108,6 +116,7 @@ class MAIN_CONTROLLER(ENGINS):
             f"Способ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode_text_patterns[f'{self.stop_loss_ratio_mode}']}\n"
             f"Значение статического стоп лосс коэффициента: {self.static_stop_loss_ratio_val}\n"
             f"Минимальное значение стоп лосс коэффициента: {self.min_default_ratio}\n"
+            f"Максимашльное значение стоп лосс коэффициента: {self.max_default_ratio}\n"            
             f"Соотношение риска к прибыли (только для фиксированного типа стоп лосса): {self.risk_reward_ratio}"
         )
         self.handle_messagee(trade_params_mess)      
@@ -151,7 +160,9 @@ class MAIN_CONTROLLER(ENGINS):
                 if candidate_symbols_list:
                     engin_answ = self.engin_1_2(candidate_symbols_list)
                     if not engin_answ:
+                        print("hksfvsfhkd")
                         self.stop_bot_flag = True
+                        continue
                 else:
                     empty_candidate_list_counter += 1 
                 if empty_candidate_list_counter == 30:

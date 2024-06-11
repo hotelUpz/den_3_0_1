@@ -17,8 +17,15 @@ class PARAMS(SETTINGSS):
         self.default_statistic_vars()
         self.init_keys()
         self.indicators_strategy_text_patterns = {
-            '1': 'trading_view_ind',
-            '2': 'trading_view_ind + trend_line',
+            '1': 'ema_crossover',
+            '2': 'ema_crossover + trend_line',
+            '3': 'ema_crossover + stoch_rsi_crossover',
+            '4': 'ema_crossover + stoch_rsi_crossover + trend_line',
+            '5': 'ema_crossover + stoch_rsi_overTrade',
+            '6': 'ema_crossover + stoch_rsi_overTrade + trend_line',
+            '7': 'smart_random + trend_line',
+            '8': 'trading_view_ind',
+            '9': 'trading_view_ind + trend_line',
         }
 
         self.stop_loss_global_type_text_patterns = {
@@ -28,7 +35,7 @@ class PARAMS(SETTINGSS):
 
         self.stop_loss_ratio_mode_text_patterns = {
             '1': 'static',
-            '2': 'volatility_total_period',
+            '2': 'volatility_period_20',
             '3': 'last_volatility',
             '4': 'last_candle_length',
             '5': 'last_candle_length/2',
@@ -75,8 +82,7 @@ class PARAMS(SETTINGSS):
 
     def ema_settings(self):
         self.interval = str(self.kline_time) + self.time_frame
-        self.max_period = max(self.ema1_period, self.ema2_period)
-        self.indicators_strategy_list_list = [['trading_view_ind'], ['trading_view_ind', 'trend_line']]
+        self.indicators_strategy_list_list = [['ema_crossover'], ['ema_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_crossover'], ['ema_crossover', 'stoch_rsi_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_overTrade'], ['ema_crossover', 'stoch_rsi_overTrade', 'trend_line'], ['trend_line', 'smart_random'], ['trading_view_ind'], ['trading_view_ind', 'trend_line']]
         self.indicators_strategy_list = self.indicators_strategy_list_list[self.indicators_strategy_number - 1]
 
     def default_statistic_vars(self):        
