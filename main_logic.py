@@ -38,14 +38,14 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     return True
             else:                            
                 # ////////////// ищем сигнал если закрыта:
-                start_time = int(time.time()*1000)
-                print("начало поиска сигнала")
-                print(f"coins_list_len: {len(coins_list)}")
+                # start_time = int(time.time()*1000)
+                # print("начало поиска сигнала")
+                # print(f"coins_list_len: {len(coins_list)}")
                 self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy) 
-                delta_time = int((int(time.time()*1000) - start_time)/ 1000)
-                print(f"конец поиска сигнала: {delta_time} сек")             
-                if not self.current_signal_val:
-                    print("нет сигнала")
+                # delta_time = int((int(time.time()*1000) - start_time)/ 1000)
+                # print(f"конец поиска сигнала: {delta_time} сек")             
+                if not self.current_signal_val:                    
+                    self.handle_messagee("нет сигнала")
                     self.is_no_signal_counter += 1
                     if self.is_no_signal_counter % self.show_absent_or_signal_every == 0:
                         msg = f"Нет сигнала на протяжение {self.is_no_signal_counter} минут"
@@ -148,7 +148,7 @@ class MAIN_CONTROLLER(ENGINS):
                 # mess_resp = 'Список монет кандидатов:\n' + '\n'.join(candidate_symbols_list)
                 # self.handle_messagee(mess_resp)
             else:
-                wait_time = self.time_calibrator(1, self.time_frame) if not self.in_position else 30    
+                wait_time = self.time_calibrator(1, 'm') if not self.in_position else 30    
             time.sleep(wait_time)
             get_coins_counter += 1
             if get_coins_counter == get_coins_counter_reset_until:
@@ -160,7 +160,7 @@ class MAIN_CONTROLLER(ENGINS):
                 if candidate_symbols_list:
                     engin_answ = self.engin_1_2(candidate_symbols_list)
                     if not engin_answ:
-                        print("hksfvsfhkd")
+                        # print("hksfvsfhkd")
                         self.stop_bot_flag = True
                         continue
                 else:
