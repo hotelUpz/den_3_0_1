@@ -43,7 +43,8 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 # print(f"coins_list_len: {len(coins_list)}")
                 try:
                     self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy)
-                except Exception as ex:                   
+                except Exception as ex:  
+                    self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = None, None, None, None                 
                     self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
                 # delta_time = int((int(time.time()*1000) - start_time)/ 1000)
                 # print(f"конец поиска сигнала: {delta_time} сек")             

@@ -1,6 +1,6 @@
 import math
 
-is_terminal_only = 1
+is_terminal_only = 0
 #
 class SETTINGSS():
     def __init__(self) -> None:
@@ -9,7 +9,7 @@ class SETTINGSS():
         self.my_name = 'Николай' # Ваше имя
         self.veryf_attemts_number = 9 # количество попыток доступа в ваш тг бот после неверно введенного пароля
         self.show_statistic_hour = 21 # время показа дневной статистики (21 - в 9 часов вечера каждого дня)
-        self.is_proxies_true = 0 # Использовать прокси. Вкл/Выкл: 1/0
+        self.is_proxies_true = 1 # Использовать прокси. Вкл/Выкл: 1/0
         self.init_main_settings()               
 
     def init_main_settings(self):
@@ -22,7 +22,7 @@ class SETTINGSS():
 
         # /////////////////////////////////////////////////////////////
         # //////////////////////////// НАСТРОЙКИ ИНДИКАТОРА:
-        self.kline_time, self.time_frame = 1, 'm' # таймфрейм где челое число - период, а буква - сам тайм фрейм (минута, час и т.д (m, h))
+        self.kline_time, self.time_frame = 15, 'm' # таймфрейм где челое число - период, а буква - сам тайм фрейм (минута, час и т.д (m, h))
         self.indicators_strategy_number = 5 # номер стратегии индикаторов
         # 1 -- 'ema_crossover': классическая стратегия прересечения двух ema (кроссовер)
         # 2 -- 'ema_crossover + trend_line': кроссовер ema плюс ориентироваться на линию тренда ema. Период равен ema_trend_line, cмотри ниже
