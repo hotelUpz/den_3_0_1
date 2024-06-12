@@ -62,8 +62,8 @@ class TEMPLATES(INFO):
         self.response_trading_list, self.create_order_success_flag = make_orders_template(self.qty, 'MARKET', None)
 
         if not self.create_order_success_flag:
-            msg = "Что-то пошло не так. Выключаемся!.."
-            self.handle_messagee(msg)
+            # msg = "Что-то пошло не так. Выключаемся!.."
+            # self.handle_messagee(msg)
             return False       
         
         return True
