@@ -119,7 +119,7 @@ class BINANCE_API(Total_Logger):
         params["symbol"] = symbol
         params['recvWindow'] = 20000
         params["interval"] = interval
-        params["limit"] = int(periodd*2.5)
+        params["limit"] = int(periodd*2.1)
         params = self.get_signature(params)
         klines = self.HTTP_request('other', self.klines_url, method='GET', headers=self.headers, params=params, proxies=self.proxiess)
         if klines:

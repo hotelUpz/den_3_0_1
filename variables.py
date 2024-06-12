@@ -88,10 +88,6 @@ class PARAMS(SETTINGSS):
         self.interval = str(self.kline_time) + self.time_frame
         self.indicators_strategy_list_list = [['ema_crossover'], ['ema_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_crossover'], ['ema_crossover', 'stoch_rsi_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_overTrade'], ['ema_crossover', 'stoch_rsi_overTrade', 'trend_line'], ['trend_line', 'smart_random'], ['trading_view_ind'], ['trading_view_ind', 'trend_line'], ['ema_crossover', 'vpvr_level']]
         self.indicators_strategy_list = self.indicators_strategy_list_list[self.indicators_strategy_number - 1]
-        if self.indicators_strategy_number == 10:
-            self.stop_loss_global_type = 2
-            self.stop_loss_ratio_mode = 8
-
 
     def default_statistic_vars(self):        
         self.win_los = 0 # результат последней сделки (в плюс или в минус)

@@ -38,16 +38,16 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     return True
             else:                            
                 # ////////////// ищем сигнал если закрыта:
-                # start_time = int(time.time()*1000)
-                # print("начало поиска сигнала")
-                # print(f"coins_list_len: {len(coins_list)}")
+                start_time = int(time.time()*1000)
+                print("начало поиска сигнала")
+                print(f"coins_list_len: {len(coins_list)}")
                 try:
                     self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy)
                 except Exception as ex:  
                     self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = None, None, None, None                 
                     self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
-                # delta_time = int((int(time.time()*1000) - start_time)/ 1000)
-                # print(f"конец поиска сигнала: {delta_time} сек")             
+                delta_time = int((int(time.time()*1000) - start_time)/ 1000)
+                print(f"конец поиска сигнала: {delta_time} сек")             
                 if not self.current_signal_val:                    
                     # self.handle_messagee("нет сигнала")
                     self.is_no_signal_counter += 1
@@ -118,7 +118,7 @@ class MAIN_CONTROLLER(ENGINS):
             f"Способ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode_text_patterns[f'{self.stop_loss_ratio_mode}']}\n"
             f"Значение статического стоп лосс коэффициента: {self.static_stop_loss_ratio_val}\n"
             f"Минимальное значение стоп лосс коэффициента: {self.min_default_ratio}\n"
-            f"Максимашльное значение стоп лосс коэффициента: {self.max_default_ratio}\n" 
+            f"Максимальное значение стоп лосс коэффициента: {self.max_default_ratio}\n" 
             f"Тайм фрейм: {self.interval}\n"            
             f"Соотношение риска к прибыли (только для фиксированного типа стоп лосса): {self.risk_reward_ratio}"
         )

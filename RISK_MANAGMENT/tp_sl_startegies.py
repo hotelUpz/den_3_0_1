@@ -84,6 +84,8 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
         
         stop_loss_ratio = None
         min_default_ratio = min_default_ratio/ 100
+        max_default_ratio = max_default_ratio/ 100
+        candles_df = candles_df.tail(self.ema_trend_line)
         # period = int(candles_df.shape[0]/ 2.5) + 1            
         # 2. VOLATILITY_TOTAL_PERIOD: Расчитывает коэффициент стоп-лосса на основе среднего истинного диапазона (ATR) за период, равный половине количества свечей в candles_df, плюс одна свеча
         if stop_loss_ratio_mode == 2:
@@ -134,11 +136,26 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                     return min_default_ratio
                 else:
                     stop_loss_ratio = abs(enter_price - absolute_max) / enter_price
+
         if stop_loss_ratio_mode == 8:
-            stop_loss_ratio = abs(enter_price - self.vpvr_level_line) / enter_price
+            if self.indicators_strategy_number == 10:
+                if self.vpvr_level_line is not None:
+                    stop_loss_ratio = abs(enter_price - self.vpvr_level_line) / enter_price
+                else:
+                    stop_loss_ratio = 0
+            else:
+                immediate_vpvr_level_defender_val = None
+                vpvr = self.calculate_vpvr(candles_df)                       
+                vpvr_levels = self.find_vpvr_levels(vpvr)
+                immediate_vpvr_level_defender_val = self.immediate_vpvr_level_defender(enter_price, vpvr_levels)                
+                if immediate_vpvr_level_defender_val:
+                    stop_loss_ratio = abs(enter_price - immediate_vpvr_level_defender_val[1]) / enter_price
+                else:
+                    stop_loss_ratio = 0
 
         if stop_loss_ratio is not None:
             if stop_loss_ratio <= min_default_ratio:
+                print(f"stop_loss_ratio: {stop_loss_ratio}")
                 self.handle_messagee(f"stop_loss_ratio < {min_default_ratio}: {stop_loss_ratio <= min_default_ratio}") 
                 return min_default_ratio
             elif stop_loss_ratio >= max_default_ratio:

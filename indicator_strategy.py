@@ -47,9 +47,10 @@ class INDICATORS(BINANCE_API):
     
     def calculate_vpvr(self, data, min_bins=10, max_bins=50):
         # Вычисляем динамическое количество корзин (bins) на основе количества свечей
-        num_candles = len(data)
+        num_candles = self.ema_trend_line
         bins = min(max(min_bins, num_candles // 10), max_bins)
-        
+        data = data.tail(self.ema_trend_line)
+        # print(data)        
         # Разбиваем данные на корзины (bins) и вычисляем объем в каждой корзине
         price_range = pd.cut(data['Close'], bins=bins)
         vpvr = data.groupby(price_range, observed=False)['Volume'].sum()
@@ -58,8 +59,31 @@ class INDICATORS(BINANCE_API):
     def find_vpvr_levels(self, vpvr, num_levels=2):
         # Поиск наиболее объемных зон VPVR
         top_vpvr_indexes = vpvr.nlargest(num_levels).index
-        vpvr_levels = [(index.left, index.right) for index in top_vpvr_indexes]
+        vpvr_levels = [(index.left, index.right, (index.left + index.right)/2, vpvr[index]) for index in top_vpvr_indexes]
         return vpvr_levels
+    
+    def immediate_vpvr_level_defender(self, cur_price, vpvr_levels):
+        disposition = (vpvr_levels[0][0] <= cur_price <= vpvr_levels[0][1]) or \
+                    (vpvr_levels[1][0] <= cur_price <= vpvr_levels[1][1])
+        if not disposition:
+            immediate_level = min(abs(vpvr_levels[0][2] - cur_price), abs(vpvr_levels[1][2] - cur_price)) + cur_price
+            strongest_volum_level = [0, 0]
+
+            for _, _, m, v in vpvr_levels:
+                cur_volum_level = v / (1 + abs(cur_price - m) / cur_price)
+                if cur_volum_level > strongest_volum_level[0]:
+                    strongest_volum_level = [cur_volum_level, m]                                
+
+            if vpvr_levels[0][2] > cur_price and vpvr_levels[1][2] > cur_price:
+                return "L", immediate_level
+            elif vpvr_levels[0][2] < cur_price and vpvr_levels[1][2] < cur_price:
+                return "S", immediate_level
+            elif strongest_volum_level[1] > cur_price:
+                return "L", strongest_volum_level[1]
+            elif strongest_volum_level[1] < cur_price:
+                return "L", strongest_volum_level[1]
+
+        return
     
     # /////// trading view indicator:
     def get_tv_signals(self, coins_list):
@@ -130,40 +154,29 @@ class INDICATORS_STRATEGYY(INDICATORS):
             if df['StochRSI_%K'].iloc[-1] > stoch_rsi_over_buy and (df['StochRSI_%D'].iloc[-1] > stoch_rsi_over_buy):
                 return "S"
             return
-        
-        def immediate_vpvr_level(cur_price, vpvr_levels):
-            # print(cur_price)
-            # # print(vpvr_levels)
-            disposition = (vpvr_levels[0][0] <= cur_price <= vpvr_levels[0][1]) or \
-                        (vpvr_levels[1][0] <= cur_price <= vpvr_levels[1][1])
-            if not disposition:
-                f_lev_midl = (vpvr_levels[0][0] + vpvr_levels[0][1])/2
-                s_lev_midl = (vpvr_levels[1][0] + vpvr_levels[1][1])/2
-                immediate_level = min(abs(f_lev_midl - cur_price), abs(s_lev_midl - cur_price)) + cur_price
-                # print(immediate_level)
-                if immediate_level > cur_price:
-                    return "L", immediate_level
-                elif immediate_level < cur_price:
-                    return "S", immediate_level
-            return
 
         if 'trading_view_ind' in strategy_list:                        
             get_tv_signals_list = self.get_tv_signals(coins_list)
             if get_tv_signals_list:
                 for symbol, cur_signal in get_tv_signals_list:
                     df = None
-                    df = self.get_klines(symbol, self.interval, ema3_period)
-                    if isinstance(df, pd.DataFrame) and not df.empty:
-                        cur_price = df['Close'].iloc[-1]
-                        if 'trend_line' not in strategy_list:
-                            return symbol, cur_signal, cur_price, df
-                                        
-                        df = self.calculate_ema(df, ema1_period, ema2_period, ema3_period)
-                        trend_line_defender_val = trend_line_defender(df)
-                        if cur_signal == "LONG_SIGNAL" and trend_line_defender_val == "L":                                       
-                            return symbol, "LONG_SIGNAL", cur_price, df 
-                        if cur_signal == "SHORT_SIGNAL" and trend_line_defender_val == "S":                         
-                            return symbol, "SHORT_SIGNAL", cur_price, df
+                    try:
+                        df = self.get_klines(symbol, self.interval, ema3_period)
+                        if isinstance(df, pd.DataFrame) and not df.empty:
+                            cur_price = df['Close'].iloc[-1]
+                            if 'trend_line' not in strategy_list:
+                                return symbol, cur_signal, cur_price, df
+                                            
+                            df = self.calculate_ema(df, ema1_period, ema2_period, ema3_period)
+                            trend_line_defender_val = trend_line_defender(df)
+                            if cur_signal == "LONG_SIGNAL" and trend_line_defender_val == "L":                                       
+                                return symbol, "LONG_SIGNAL", cur_price, df 
+                            if cur_signal == "SHORT_SIGNAL" and trend_line_defender_val == "S":                         
+                                return symbol, "SHORT_SIGNAL", cur_price, df
+                    except Exception as ex:
+                        print(ex)
+                        self.black_coins_list.append(symbol)
+
                     time.sleep(0.05)
         else:
             for symbol in coins_list:
@@ -171,77 +184,82 @@ class INDICATORS_STRATEGYY(INDICATORS):
                 long_trend = False
                 short_trend = False
                 df = None
-                df = self.get_klines(symbol, self.interval, ema3_period)
-                if isinstance(df, pd.DataFrame) and not df.empty:
-                    df = self.calculate_ema(df, ema1_period, ema2_period, ema3_period)
-                    cur_price = df["Close"].iloc[-1]                 
-                    
-                    if 'ema_crossover' in strategy_list: 
-                        ema_crossover_defender_val = ema_crossover_defender(df)                       
-                        if ema_crossover_defender_val == "L":
-                            # print(f"ema_crossover signals_assum += 1")
-                            signals_assum += 1  
-                        elif ema_crossover_defender_val == "S":
-                            # print(f"ema_crossover signals_assum -= 1")
-                            signals_assum -= 1
-
-                    if 'trend_line' in strategy_list:
-                        trend_line_defender_val = trend_line_defender(df)
-                        if trend_line_defender_val == "L":
-                            # print(f"trend_line signals_assum += 1")
-                            long_trend = True
-                            signals_assum += 1
-                        elif trend_line_defender_val == "S":
-                            # print(f"trend_line signals_assum -= 1")
-                            short_trend = True
-                            signals_assum -= 1                       
+                try:                        
+                    df = self.get_klines(symbol, self.interval, ema3_period)
+                    if isinstance(df, pd.DataFrame) and not df.empty:
+                        df = self.calculate_ema(df, ema1_period, ema2_period, ema3_period)
+                        cur_price = df["Close"].iloc[-1]                 
                         
-                    if 'stoch_rsi_crossover' in strategy_list:
-                        df = self.calculate_stoch_rsi(df)
-                        stoch_rsi_srossover_defender_val = stoch_rsi_srossover_defender(df)
-                        if stoch_rsi_srossover_defender_val == "L":
-                            signals_assum += 1
-                        elif stoch_rsi_srossover_defender_val == "S":
-                            signals_assum -= 1
-
-                    if 'stoch_rsi_overTrade' in strategy_list:
-                        df = self.calculate_stoch_rsi(df)
-                        stoch_rsi_overTrade_defender_val = stoch_rsi_overTrade_defender(df)
-                        # print(stoch_rsi_overTrade_defender_val)
-                        if stoch_rsi_overTrade_defender_val == "L":
-                            signals_assum += 1
-                        elif stoch_rsi_overTrade_defender_val == "S":
-                            signals_assum -= 1
-
-                    if 'smart_random' in strategy_list:
-                        if long_trend:
-                            random_list = [1,2,3,4,5,6,1,3,5,7,8,9,10]
-                        elif short_trend:
-                            random_list = [1,2,3,4,5,2,4,6,6,7,8,9,10]
-                        if long_trend or short_trend:                         
-                            if choice(random_list) % 2 != 0:
-                                return symbol, "LONG_SIGNAL", cur_price, df
-                            else:
-                                return symbol, "SHORT_SIGNAL", cur_price, df
-                            
-                    if 'vpvr_level' in strategy_list:
-                        immediate_vpvr_level_val = None
-                        vpvr = self.calculate_vpvr(df)                       
-                        vpvr_levels = self.find_vpvr_levels(vpvr)
-                        immediate_vpvr_level_val = immediate_vpvr_level(cur_price, vpvr_levels)
-                        if immediate_vpvr_level_val:
-                            if immediate_vpvr_level_val[0] == 'L':
-                                print("L")
-                                signals_assum += 1
-                            elif immediate_vpvr_level_val[0] == 'S':
-                                print("S")
+                        if 'ema_crossover' in strategy_list: 
+                            ema_crossover_defender_val = ema_crossover_defender(df)                       
+                            if ema_crossover_defender_val == "L":
+                                print(f"ema_crossover signals_assum += 1")
+                                signals_assum += 1  
+                            elif ema_crossover_defender_val == "S":
+                                print(f"ema_crossover signals_assum -= 1")
                                 signals_assum -= 1
-                            self.vpvr_level_line = immediate_vpvr_level_val[1]
 
-                    if signals_assum > 0 and signals_assum == len(strategy_list):
-                        return symbol, "LONG_SIGNAL", cur_price, df 
-                    elif signals_assum < 0 and abs(signals_assum) == len(strategy_list):
-                        return symbol, "SHORT_SIGNAL", cur_price, df
+                        if 'trend_line' in strategy_list:
+                            trend_line_defender_val = trend_line_defender(df)
+                            if trend_line_defender_val == "L":
+                                # print(f"trend_line signals_assum += 1")
+                                long_trend = True
+                                signals_assum += 1
+                            elif trend_line_defender_val == "S":
+                                # print(f"trend_line signals_assum -= 1")
+                                short_trend = True
+                                signals_assum -= 1                       
+                            
+                        if 'stoch_rsi_crossover' in strategy_list:
+                            df = self.calculate_stoch_rsi(df)
+                            stoch_rsi_srossover_defender_val = stoch_rsi_srossover_defender(df)
+                            if stoch_rsi_srossover_defender_val == "L":
+                                signals_assum += 1
+                            elif stoch_rsi_srossover_defender_val == "S":
+                                signals_assum -= 1
+
+                        if 'stoch_rsi_overTrade' in strategy_list:
+                            df = self.calculate_stoch_rsi(df)
+                            stoch_rsi_overTrade_defender_val = stoch_rsi_overTrade_defender(df)
+                            # print(stoch_rsi_overTrade_defender_val)
+                            if stoch_rsi_overTrade_defender_val == "L":
+                                signals_assum += 1
+                            elif stoch_rsi_overTrade_defender_val == "S":
+                                signals_assum -= 1
+
+                        if 'smart_random' in strategy_list:
+                            if long_trend:
+                                random_list = [1,2,3,4,5,6,1,3,5,7,8,9,10]
+                            elif short_trend:
+                                random_list = [1,2,3,4,5,2,4,6,6,7,8,9,10]
+                            if long_trend or short_trend:                         
+                                if choice(random_list) % 2 != 0:
+                                    return symbol, "LONG_SIGNAL", cur_price, df
+                                else:
+                                    return symbol, "SHORT_SIGNAL", cur_price, df
+                                
+                        if 'vpvr_level' in strategy_list:
+                            immediate_vpvr_level_defender_val = None
+                            vpvr = self.calculate_vpvr(df)                       
+                            vpvr_levels = self.find_vpvr_levels(vpvr)
+                            immediate_vpvr_level_defender_val = self.immediate_vpvr_level_defender(cur_price, vpvr_levels)
+                            
+                            if immediate_vpvr_level_defender_val:
+                                if immediate_vpvr_level_defender_val[0] == 'L':
+                                    print("L")
+                                    signals_assum += 1
+                                elif immediate_vpvr_level_defender_val[0] == 'S':
+                                    print("S")
+                                    signals_assum -= 1
+                                self.vpvr_level_line = immediate_vpvr_level_defender_val[1]
+
+                        if signals_assum > 0 and signals_assum == len(strategy_list):
+                            return symbol, "LONG_SIGNAL", cur_price, df 
+                        elif signals_assum < 0 and abs(signals_assum) == len(strategy_list):
+                            return symbol, "SHORT_SIGNAL", cur_price, df
+                except Exception as ex:
+                    print(ex)
+                    self.black_coins_list.append(symbol)
                 
                 time.sleep(0.05)
 
