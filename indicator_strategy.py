@@ -193,10 +193,10 @@ class INDICATORS_STRATEGYY(INDICATORS):
                         if 'ema_crossover' in strategy_list: 
                             ema_crossover_defender_val = ema_crossover_defender(df)                       
                             if ema_crossover_defender_val == "L":
-                                print(f"ema_crossover signals_assum += 1")
+                                # print(f"ema_crossover signals_assum += 1")
                                 signals_assum += 1  
                             elif ema_crossover_defender_val == "S":
-                                print(f"ema_crossover signals_assum -= 1")
+                                # print(f"ema_crossover signals_assum -= 1")
                                 signals_assum -= 1
 
                         if 'trend_line' in strategy_list:
@@ -246,10 +246,10 @@ class INDICATORS_STRATEGYY(INDICATORS):
                             
                             if immediate_vpvr_level_defender_val:
                                 if immediate_vpvr_level_defender_val[0] == 'L':
-                                    print("L")
+                                    # print("L")
                                     signals_assum += 1
                                 elif immediate_vpvr_level_defender_val[0] == 'S':
-                                    print("S")
+                                    # print("S")
                                     signals_assum -= 1
                                 self.vpvr_level_line = immediate_vpvr_level_defender_val[1]
 
