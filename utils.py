@@ -1,25 +1,11 @@
 import requests
 import time
 from datetime import datetime as dttm, time as timm, timedelta as tmdl
+import pytz
 # from random import choice
 import math
 import decimal
 from indicator_strategy import INDICATORS_STRATEGYY
-
-def server_to_utc_difference_counter():
-    server_time_naive = dttm.now()
-    # print(f"server_time_naive: {server_time_naive}")
-    utc_time = dttm.utcnow()
-    # print(f"utc_time: {utc_time}")
-    time_difference = server_time_naive - utc_time
-    total_seconds = abs(time_difference.total_seconds()) * 1000
-    total_seconds = math.ceil(total_seconds)
-    if total_seconds < 10:
-        return 0
-    return total_seconds
-
-time_correction_val = server_to_utc_difference_counter()
-# print("Разница между серверным временем в милисекундах:", time_correction_val)
 
 class COInN_FILTERR(INDICATORS_STRATEGYY):
     def __init__(self) -> None:
@@ -164,16 +150,15 @@ class UTILS(COInN_FILTERR):
 
     # # /////////////////////////////////////////////////////////////
     def get_next_show_statistic_time(self):
-        current_time = dttm.now()
+        current_time = dttm.now(self.local_tz)
         target_time = current_time.replace(hour=self.show_statistic_hour, minute=0, second=0)
         if current_time >= target_time:            
             target_time += tmdl(days=1)        
         return target_time
     
     def show_statistic_signal(self, target_time): 
-        now_time = dttm.now()      
+        now_time = dttm.now(self.local_tz)
         if now_time >= target_time:
             target_time = self.get_next_show_statistic_time()             
             return True, target_time          
         return False, target_time
-    # # /////////////////////////////////////////////////////////////

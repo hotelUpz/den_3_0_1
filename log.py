@@ -9,17 +9,17 @@ class Logger():
     def __init__(self) -> None:
         super().__init__()
         self.logs_buffer = []
-        self.all_errors = {}  
+        # self.all_errors = {}  
         
     def log_to_buffer(self, file_name, line_number, exception_message):
         self.logs_buffer.append((file_name, line_number, exception_message))
 
-    def log_all_errors(self, file_name, timestamp, exception_message):
-        if file_name in self.all_errors:
-            if exception_message not in self.all_errors[file_name]:
-                self.all_errors[file_name].append((timestamp, exception_message))
-        else:
-            self.all_errors[file_name] = [(timestamp, exception_message)]
+    # def log_all_errors(self, file_name, timestamp, exception_message):
+    #     if file_name in self.all_errors:
+    #         if exception_message not in self.all_errors[file_name]:
+    #             self.all_errors[file_name].append((timestamp, exception_message))
+    #     else:
+    #         self.all_errors[file_name] = [(timestamp, exception_message)]
 
     def get_logs(self):
         if self.logs_buffer:
@@ -66,7 +66,7 @@ class Total_Logger(JsonLogger, TG_CONNECTOR):
             try:
                 return func(*args, **kwargs)
             except Exception as ex:
-                timestamp = datetime.utcnow()
+                # timestamp = datetime.utcnow()
                 current_frame = inspect.currentframe()
                 caller_frame = current_frame.f_back
                 file_name = caller_frame.f_code.co_filename
@@ -74,7 +74,7 @@ class Total_Logger(JsonLogger, TG_CONNECTOR):
                 exception_message = str(ex)
                 error_info = (file_name, line_number, exception_message)
                 self.log_to_buffer(*error_info)
-                self.log_all_errors(file_name, timestamp, exception_message)
+                # self.log_all_errors(file_name, timestamp, exception_message)
                 self.handle_exception(f"Error occurred in file '{file_name}', line {line_number}: {exception_message}")
 
         return wrapper

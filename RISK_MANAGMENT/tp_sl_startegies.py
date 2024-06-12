@@ -33,6 +33,9 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             6. LAST_MINIMUM: Если позиция длинная (direction = 1), используется разница между закрытием-открытием и минимумом второй с конца свечи; если короткая (direction = -1), используется разница между закрытием-открфтием и максимумом второй с конца свечи.
                 
             7. ABSOLUTE_MIN: Для длинной позиции рассчитывается разница между ценой входа и абсолютным минимумом свечей периода 20; для короткой позиции - между ценой входа и абсолютным максимумом свечей. Если минимум/максимум выходит за пределы цены входа, возвращается фиксированное значение стоп-лосса.
+        
+            8. VPVR_LEVEL: высчитывается с учетом ориентирования на ближайшую сильную зону VPVR индикатора.
+        
         """
     def tp_sl_strategies_documenttion(self):
         """
@@ -131,6 +134,8 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                     return min_default_ratio
                 else:
                     stop_loss_ratio = abs(enter_price - absolute_max) / enter_price
+        if stop_loss_ratio_mode == 8:
+            stop_loss_ratio = abs(enter_price - self.vpvr_level_line) / enter_price
 
         if stop_loss_ratio is not None:
             if stop_loss_ratio <= min_default_ratio:

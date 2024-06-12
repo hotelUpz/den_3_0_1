@@ -210,7 +210,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 self.bot.send_message(message.chat.id, "Настройки стоп лосс стратегии применены успешно!")  
 
             # ////////////////////////////////////////////////////////////////////////////
-            @self.bot.message_handler(func=lambda message: message.text == 'ADD IN BLACK LIST')             
+            @self.bot.message_handler(func=lambda message: message.text == 'ADD TO BLACK LIST')             
             def handle_add_in_dlack_list(message):
                 self.last_message = message
                 if self.seq_control_flag:

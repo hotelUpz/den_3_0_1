@@ -8,7 +8,8 @@ class PARAMS(SETTINGSS):
     def __init__(self) -> None:
         super().__init__()
         # print("init VARIABLES")
-        self.symbol = None        
+        self.symbol = None   
+        self.vpvr_level_line = None     
         self.market_place = 'binance'
         self.default_tg_vars()
         self.init_some_params()
@@ -26,6 +27,7 @@ class PARAMS(SETTINGSS):
             '7': 'smart_random + trend_line',
             '8': 'trading_view_ind',
             '9': 'trading_view_ind + trend_line',
+            '10': 'ema_crossover + vpvr_level',
         }
 
         self.stop_loss_global_type_text_patterns = {
@@ -41,6 +43,7 @@ class PARAMS(SETTINGSS):
             '5': 'last_candle_length/2',
             '6': 'last_minimum',
             '7': 'absolute_minimum',
+            '8': 'vpvr_level',
         }
 
     def init_main_file_variables(self):
@@ -83,8 +86,12 @@ class PARAMS(SETTINGSS):
 
     def ema_settings(self):
         self.interval = str(self.kline_time) + self.time_frame
-        self.indicators_strategy_list_list = [['ema_crossover'], ['ema_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_crossover'], ['ema_crossover', 'stoch_rsi_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_overTrade'], ['ema_crossover', 'stoch_rsi_overTrade', 'trend_line'], ['trend_line', 'smart_random'], ['trading_view_ind'], ['trading_view_ind', 'trend_line']]
+        self.indicators_strategy_list_list = [['ema_crossover'], ['ema_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_crossover'], ['ema_crossover', 'stoch_rsi_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_overTrade'], ['ema_crossover', 'stoch_rsi_overTrade', 'trend_line'], ['trend_line', 'smart_random'], ['trading_view_ind'], ['trading_view_ind', 'trend_line'], ['ema_crossover', 'vpvr_level']]
         self.indicators_strategy_list = self.indicators_strategy_list_list[self.indicators_strategy_number - 1]
+        if self.indicators_strategy_number == 10:
+            self.stop_loss_global_type = 2
+            self.stop_loss_ratio_mode = 8
+
 
     def default_statistic_vars(self):        
         self.win_los = 0 # результат последней сделки (в плюс или в минус)

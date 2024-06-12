@@ -118,7 +118,8 @@ class MAIN_CONTROLLER(ENGINS):
             f"Способ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode_text_patterns[f'{self.stop_loss_ratio_mode}']}\n"
             f"Значение статического стоп лосс коэффициента: {self.static_stop_loss_ratio_val}\n"
             f"Минимальное значение стоп лосс коэффициента: {self.min_default_ratio}\n"
-            f"Максимашльное значение стоп лосс коэффициента: {self.max_default_ratio}\n"            
+            f"Максимашльное значение стоп лосс коэффициента: {self.max_default_ratio}\n" 
+            f"Тайм фрейм: {self.interval}\n"            
             f"Соотношение риска к прибыли (только для фиксированного типа стоп лосса): {self.risk_reward_ratio}"
         )
         self.handle_messagee(trade_params_mess)      

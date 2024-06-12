@@ -1,5 +1,5 @@
-import time
-from utils import UTILS, time_correction_val
+from datetime import datetime as dttm
+from utils import UTILS
 import os, inspect
 current_file = os.path.basename(__file__)
 
@@ -38,9 +38,8 @@ class INFO(UTILS):
             specific_key_list = ["orderId", "symbol", "type", "side", "avgPrice", "executedQty", "activatePrice", "priceRate", "stopPrice"]
             order_answer_str = ""
             try:
-                # order_time = self.milliseconds_to_datetime(order_answer.get('updateTime') + time_correction_val)
-                ms_order_time = int(time.time()* 1000) + time_correction_val
-                order_time = self.milliseconds_to_datetime(ms_order_time)
+                now_time = dttm.now(self.local_tz)
+                order_time = now_time.strftime('%Y-%m-%d %H:%M:%S')
                 for k, v in order_answer.items():
                     if k in specific_key_list:
                         order_answer_str += f"{k}: {v}\n"

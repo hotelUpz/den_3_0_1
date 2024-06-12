@@ -9,7 +9,6 @@ class STATISTIC(MARTIN_GALE):
         # устанавливаем функциии декораторы
         self.last_statistic_control = self.log_exceptions_decorator(self.last_statistic_control) 
         self.statistic_calculations = self.log_exceptions_decorator(self.statistic_calculations)
-        self.show_statustik = self.log_exceptions_decorator(self.show_statustik)
 
     def last_statistic_control(self, symbol, depo):        
         init_order_price, oposit_order_price = 0, 0
@@ -43,7 +42,7 @@ class STATISTIC(MARTIN_GALE):
             self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
         return 0, init_order_price, oposit_order_price, depo
   
-    def statistic_calculations(self, daily_trade_history_list, symbol):
+    def statistic_calculations(self, daily_trade_history_list):
         result_statistic_dict = {}
         # result_statistic_dict["symbol"] = symbol
         win_to_loss_statistik = "0:0"
@@ -117,16 +116,3 @@ class STATISTIC(MARTIN_GALE):
 
         result_string = "\n".join(f"{key}: {value}" for key, value in result_statistic_dict.items())
         return result_string
-
-    def show_statustik(self):
-        self.cur_date = self.date_of_the_month()
-        if self.last_date < self.cur_date:
-            self.is_time_to_show_done = False
-            self.last_date = self.cur_date
-
-        if self.is_time_to_show_statistik(self.show_statistic_hour) and not self.is_time_to_show_done:
-            result_statistic_dict = ""
-            result_statistic_dict = self.statistic_calculations(self.daily_trade_history_list, self.symbol)                   
-            self.handle_messagee(f"Показатели торгов за сутки:\n{result_statistic_dict}")                             
-            self.daily_trade_history_list = []
-            self.is_time_to_show_done = True 
