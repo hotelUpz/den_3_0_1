@@ -37,15 +37,16 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     self.handle_messagee(msg)
                     return True
             else:                            
-                # # ////////////// ищем сигнал если закрыта:
+                # # ////////////// ищем сигнал если закрыта:                
                 # start_time = int(time.time()*1000)
                 # print("начало поиска сигнала")
                 # print(f"coins_list_len: {len(coins_list)}")
                 try:
                     self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy)
-                except Exception as ex:  
-                    self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = None, None, None, None                 
-                    self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
+                except Exception as ex: 
+                    pass 
+                    # self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = None, None, None, None                 
+                    # self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
                 # delta_time = int((int(time.time()*1000) - start_time)/ 1000)
                 # print(f"конец поиска сигнала: {delta_time} сек")             
                 if not self.current_signal_val:                    
@@ -68,11 +69,13 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     msg = "Размер депозита для данной монеты слишком мал. Ищем другую монету"
                     self.handle_messagee(msg)
                     self.black_coins_list.append(self.symbol)
+                    self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
                     self.wait_candle_flag = True
                     return 2
                 
                 if not self.make_orders_template_shell():
                     self.black_coins_list.append(self.symbol)
+                    self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
                     self.wait_candle_flag = True
                     return 2
                 # //////////// вычисляем стопы:
@@ -107,8 +110,7 @@ class MAIN_CONTROLLER(ENGINS):
         super().__init__()
 
     def main_func(self):
-        # self.last_date = self.date_of_the_month() 
-        candidate_symbols_list  = []
+        # self.last_date = self.date_of_the_month()        
         empty_candidate_list_counter = 0
         engin_answ = None
         trade_params_mess = (
@@ -160,21 +162,22 @@ class MAIN_CONTROLLER(ENGINS):
                 wait_time = self.time_calibrator(self.kline_time, self.time_frame)
                 msg = f"Ждем закрытия последней {self.interval} свечи. Осталось {round(wait_time/60, 2)} минут"
                 self.handle_messagee(msg)
-                candidate_symbols_list = self.get_top_coins_template()
-                # mess_resp = 'Список монет кандидатов:\n' + '\n'.join(candidate_symbols_list)
+                self.candidate_symbols_list = self.get_top_coins_template()
+                self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
+                # mess_resp = 'Список монет кандидатов:\n' + '\n'.join(self.candidate_symbols_list)
                 # self.handle_messagee(mess_resp)
             else:
                 wait_time = self.time_calibrator(1, 'm') if not self.in_position else 30    
             time.sleep(wait_time)
             get_coins_counter += 1
             if get_coins_counter == get_coins_counter_reset_until:
-                candidate_symbols_list = self.get_top_coins_template()
+                self.candidate_symbols_list = self.get_top_coins_template()
+                self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
                 get_coins_counter = 0           
 
-            if self.stop_loss_global_type in [1,2]:
-                candidate_symbols_list = [x for x in candidate_symbols_list if x not in self.black_coins_list]
-                if candidate_symbols_list:
-                    engin_answ = self.engin_1_2(candidate_symbols_list)
+            if self.stop_loss_global_type in [1,2]:                
+                if self.candidate_symbols_list:
+                    engin_answ = self.engin_1_2(self.candidate_symbols_list)
                     if not engin_answ:
                         self.stop_bot_flag = True
                         continue

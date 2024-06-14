@@ -24,8 +24,9 @@ class INDICATORS(BINANCE_API):
             7 - 'smart_random + trend_line' # рандомный выбор сигнала c ориентацией на тренд. Рекомендуется использовать только для тестов
             8 -- 'trading_view_ind' -- индикатор библиотеки трейдинг вью
             9 -- 'trading_view_ind + trend_line' -- индикатор библиотеки трейдинг вью + трендовая линия
+            10 -- 'ema_crossover + vpvr_level' # кроссовер ema плюс + vpvr индикатор
         """
-    # pandas_ta library: .......................................     
+
     def calculate_ema(self, data, ema1_period, ema2_period, ema3_period):
         data[f"EMA{ema1_period}"] = ta.ema(data['Close'], length=ema1_period)
         data[f"EMA{ema2_period}"] = ta.ema(data['Close'], length=ema2_period)
@@ -176,6 +177,7 @@ class INDICATORS_STRATEGYY(INDICATORS):
                     except Exception as ex:
                         print(ex)
                         self.black_coins_list.append(symbol)
+                        self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
 
                     time.sleep(0.05)
         else:
@@ -260,6 +262,7 @@ class INDICATORS_STRATEGYY(INDICATORS):
                 except Exception as ex:
                     print(ex)
                     self.black_coins_list.append(symbol)
+                    self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
                 
                 time.sleep(0.05)
 

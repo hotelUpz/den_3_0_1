@@ -9,7 +9,8 @@ class PARAMS(SETTINGSS):
         super().__init__()
         # print("init VARIABLES")
         self.symbol = None   
-        self.vpvr_level_line = None     
+        self.vpvr_level_line = None
+        self.candidate_symbols_list = [] 
         self.market_place = 'binance'
         self.default_tg_vars()
         self.init_some_params()

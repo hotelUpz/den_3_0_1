@@ -57,6 +57,7 @@ class STATISTIC(MARTIN_GALE):
             return "Нет данных для анализа"
 
         try:
+            self.handle_exception(f"{daily_trade_history_list}")
             win_count = sum(1 for win_los, _, _, _ in daily_trade_history_list if win_los == 1)
             loss_count = sum(1 for win_los, _, _, _ in daily_trade_history_list if win_los == -1)
             win_to_loss_statistik = f"{win_count}:{loss_count}"
@@ -66,53 +67,66 @@ class STATISTIC(MARTIN_GALE):
 
         try:
             total_result_list = []
-            for win_los, init_order_price, oposit_order_price, last_depo in daily_trade_history_list:
-                if win_los == 1:
-                    total_result_list.append((abs(init_order_price - oposit_order_price) / init_order_price) * last_depo)
-                elif win_los == -1:
-                    total_result_list.append(-1 * (abs(init_order_price - oposit_order_price) / init_order_price) * last_depo)
-
+            try:
+                for win_los, init_order_price, oposit_order_price, last_depo in daily_trade_history_list:
+                    if win_los == 1:
+                        total_result_list.append((abs(init_order_price - oposit_order_price) / init_order_price) * last_depo)
+                    elif win_los == -1:
+                        total_result_list.append(-1 * (abs(init_order_price - oposit_order_price) / init_order_price) * last_depo)
+            except Exception as ex:
+                self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
             if total_result_list:
-                max_profit_abs = max(x for x in total_result_list if x > 0)
-                max_loss_abs = min(x for x in total_result_list if x < 0)
-                total_profit_abs = sum(x for x in total_result_list if x > 0)
-                total_losses_abs = sum(x for x in total_result_list if x < 0)
+                try:
+                    max_profit_abs = max(x for x in total_result_list if x > 0)
+                    max_loss_abs = min(x for x in total_result_list if x < 0)
+                    total_profit_abs = sum(x for x in total_result_list if x > 0)
+                    total_losses_abs = sum(x for x in total_result_list if x < 0)
 
-                current_positive_sum = 0
-                current_negative_sum = 0
+                    current_positive_sum = 0
+                    current_negative_sum = 0
 
-                for t in total_result_list:
-                    if t > 0:
-                        current_positive_sum += t
-                        if current_negative_sum < 0:
-                            max_drawdown = min(max_drawdown, current_negative_sum)
-                            current_negative_sum = 0
-                    elif t < 0:
-                        current_negative_sum += t
-                        if current_positive_sum > 0:
-                            best_performance = max(best_performance, current_positive_sum)
-                            current_positive_sum = 0
-
+                    for t in total_result_list:
+                        if t > 0:
+                            current_positive_sum += t
+                            if current_negative_sum < 0:
+                                max_drawdown = min(max_drawdown, current_negative_sum)
+                                current_negative_sum = 0
+                        elif t < 0:
+                            current_negative_sum += t
+                            if current_positive_sum > 0:
+                                best_performance = max(best_performance, current_positive_sum)
+                                current_positive_sum = 0
+                except Exception as ex:
+                    self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
+            try:
                 best_performance = max(best_performance, current_positive_sum)
+            except Exception as ex:
+                self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
+            try:
                 max_drawdown = min(max_drawdown, current_negative_sum)
+            except Exception as ex:
+                self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
         except Exception as ex:
             self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
 
-        result_statistic_dict["Суммарный доход ($)"] = total_profit_abs
-        result_statistic_dict["Суммарный убыток ($)"] = total_losses_abs
-        result_statistic_dict["Прибыль (без учета комиссии) ($)"] = total_profit_abs - abs(total_losses_abs)
+        try:
+            result_statistic_dict["Суммарный доход ($)"] = total_profit_abs
+            result_statistic_dict["Суммарный убыток ($)"] = total_losses_abs
+            result_statistic_dict["Прибыль (без учета комиссии) ($)"] = total_profit_abs - abs(total_losses_abs)
 
-        if result_statistic_dict["Прибыль (без учета комиссии) ($)"] > 0:
-            result_statistic_dict["Результат торговли за день"] = "Сегодня стратегия сработала в плюс"
-        elif result_statistic_dict["Прибыль (без учета комиссии) ($)"] < 0:
-            result_statistic_dict["Результат торговли за день"] = "Сегодня стратегия сработала в минус"
-        else:
-            result_statistic_dict["Результат торговли за день"] = "Сегодня стратегия сработала в ноль"
+            if result_statistic_dict["Прибыль (без учета комиссии) ($)"] > 0:
+                result_statistic_dict["Результат торговли за день"] = "Сегодня стратегия сработала в плюс"
+            elif result_statistic_dict["Прибыль (без учета комиссии) ($)"] < 0:
+                result_statistic_dict["Результат торговли за день"] = "Сегодня стратегия сработала в минус"
+            else:
+                result_statistic_dict["Результат торговли за день"] = "Сегодня стратегия сработала в ноль"
 
-        result_statistic_dict["Максимально прибыльная сделка ($)"] = max_profit_abs
-        result_statistic_dict["Максимально убыточная сделка ($)"] = max_loss_abs
-        result_statistic_dict["Перфоманс (максимальная сумма серии удачных сделок) ($)"] = best_performance
-        result_statistic_dict["Максимальная просадка ($)"] = max_drawdown
+            result_statistic_dict["Максимально прибыльная сделка ($)"] = max_profit_abs
+            result_statistic_dict["Максимально убыточная сделка ($)"] = max_loss_abs
+            result_statistic_dict["Перфоманс (максимальная сумма серии удачных сделок) ($)"] = best_performance
+            result_statistic_dict["Максимальная просадка ($)"] = max_drawdown
+        except Exception as ex:
+            self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
 
         result_string = "\n".join(f"{key}: {value}" for key, value in result_statistic_dict.items())
         return result_string
