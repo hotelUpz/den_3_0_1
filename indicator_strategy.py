@@ -106,10 +106,10 @@ class INDICATORS(BINANCE_API):
             except:
                 continue
             if (recommendation == 'STRONG_BUY'):
-                signals_list.append((symbol, "LONG_SIGNAL"))          
+                signals_list.append((symbol, 1))          
 
             elif (recommendation == 'STRONG_SELL'):
-                signals_list.append((symbol, "SHORT_SIGNAL"))             
+                signals_list.append((symbol, -1))             
 
         return signals_list    
 
@@ -170,10 +170,10 @@ class INDICATORS_STRATEGYY(INDICATORS):
                                             
                             df = self.calculate_ema(df, ema1_period, ema2_period, ema3_period)
                             trend_line_defender_val = trend_line_defender(df)
-                            if cur_signal == "LONG_SIGNAL" and trend_line_defender_val == "L":                                       
-                                return symbol, "LONG_SIGNAL", cur_price, df 
-                            if cur_signal == "SHORT_SIGNAL" and trend_line_defender_val == "S":                         
-                                return symbol, "SHORT_SIGNAL", cur_price, df
+                            if cur_signal == 1 and trend_line_defender_val == "L":                                       
+                                return symbol, 1, cur_price, df 
+                            if cur_signal == -1 and trend_line_defender_val == "S":                         
+                                return symbol, -1, cur_price, df
                     except Exception as ex:
                         print(ex)
                         self.black_coins_list.append(symbol)
@@ -236,9 +236,9 @@ class INDICATORS_STRATEGYY(INDICATORS):
                                 random_list = [1,2,3,4,5,2,4,6,6,7,8,9,10]
                             if long_trend or short_trend:                         
                                 if choice(random_list) % 2 != 0:
-                                    return symbol, "LONG_SIGNAL", cur_price, df
+                                    return symbol, 1, cur_price, df
                                 else:
-                                    return symbol, "SHORT_SIGNAL", cur_price, df
+                                    return symbol, -1, cur_price, df
                                 
                         if 'vpvr_level' in strategy_list:
                             immediate_vpvr_level_defender_val = None
@@ -256,9 +256,9 @@ class INDICATORS_STRATEGYY(INDICATORS):
                                 self.vpvr_level_line = immediate_vpvr_level_defender_val[1]
 
                         if signals_assum > 0 and signals_assum == len(strategy_list):
-                            return symbol, "LONG_SIGNAL", cur_price, df 
+                            return symbol, 1, cur_price, df 
                         elif signals_assum < 0 and abs(signals_assum) == len(strategy_list):
-                            return symbol, "SHORT_SIGNAL", cur_price, df
+                            return symbol, -1, cur_price, df
                 except Exception as ex:
                     print(ex)
                     self.black_coins_list.append(symbol)

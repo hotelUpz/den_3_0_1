@@ -29,22 +29,25 @@ class STATISTIC(MARTIN_GALE):
             if the_orders[0].get('side', None) == the_orders[1].get('side', None):
                 return 0, 0, 0, depo
             if the_orders[0].get('side', None) == 'BUY':
-                if init_order_price - oposit_order_price > 0:
+                if init_order_price - oposit_order_price > 0.01:
                     return -1, init_order_price, oposit_order_price, depo
-                elif init_order_price - oposit_order_price < 0:
+                elif init_order_price - oposit_order_price < -0.01:
                     return 1, init_order_price, oposit_order_price, depo
+                else:
+                    return 0, init_order_price, oposit_order_price, depo
             elif the_orders[0].get('side', None) == 'SELL':
-                if init_order_price - oposit_order_price > 0:
+                if init_order_price - oposit_order_price > 0.01:
                     return 1, init_order_price, oposit_order_price, depo
-                elif init_order_price - oposit_order_price < 0:
+                elif init_order_price - oposit_order_price < -0.01:
                     return -1, init_order_price, oposit_order_price, depo
+                else:
+                    return 0, init_order_price, oposit_order_price, depo
         except Exception as ex:
             self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
         return 0, init_order_price, oposit_order_price, depo
   
     def statistic_calculations(self, daily_trade_history_list):
         result_statistic_dict = {}
-        # result_statistic_dict["symbol"] = symbol
         win_to_loss_statistik = "0:0"
         max_profit_abs = 0
         max_loss_abs = 0
@@ -113,14 +116,6 @@ class STATISTIC(MARTIN_GALE):
             result_statistic_dict["Суммарный доход ($)"] = total_profit_abs
             result_statistic_dict["Суммарный убыток ($)"] = total_losses_abs
             result_statistic_dict["Прибыль (без учета комиссии) ($)"] = total_profit_abs - abs(total_losses_abs)
-
-            if result_statistic_dict["Прибыль (без учета комиссии) ($)"] > 0:
-                result_statistic_dict["Результат торговли за день"] = "Сегодня стратегия сработала в плюс"
-            elif result_statistic_dict["Прибыль (без учета комиссии) ($)"] < 0:
-                result_statistic_dict["Результат торговли за день"] = "Сегодня стратегия сработала в минус"
-            else:
-                result_statistic_dict["Результат торговли за день"] = "Сегодня стратегия сработала в ноль"
-
             result_statistic_dict["Максимально прибыльная сделка ($)"] = max_profit_abs
             result_statistic_dict["Максимально убыточная сделка ($)"] = max_loss_abs
             result_statistic_dict["Перфоманс (максимальная сумма серии удачных сделок) ($)"] = best_performance

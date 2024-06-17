@@ -22,29 +22,33 @@ class MARTIN_GALE(TEMPLATES):
             # print(cur_losses)
     
     def martin_gale_prosess_handler(self, last_win_los, start_depo, depo, cur_martin_gale_counter, max_martin_gale_counter, martin_gale_ratio):
-        if (cur_martin_gale_counter == max_martin_gale_counter) or (last_win_los == 1):
-            cur_martin_gale_counter = 0
+        if (cur_martin_gale_counter == max_martin_gale_counter) or (last_win_los in [0, 1]):
             depo = start_depo
-            self.handle_messagee(f"Размер депозита был сброшен до начального и составляет: {depo}") 
+            if self.play_by_leverage:
+                self.lev_size = self.lev_size_default
+            if cur_martin_gale_counter != 0:
+                self.handle_messagee(f"Размер депозита был сброшен до начального и составляет: {depo}")
+            cur_martin_gale_counter = 0
             return depo, cur_martin_gale_counter
         if last_win_los == -1:
-            depo = round(depo*martin_gale_ratio, 2)
+            if self.play_by_leverage:
+                self.lev_size = int(self.lev_size* martin_gale_ratio)
+            depo = round(depo* martin_gale_ratio, 2)
             cur_martin_gale_counter += 1
-            self.handle_messagee(f"Размер депозита был изменен и составляет: {depo}\n Tекущий Мартин Гейл счетчик равен {cur_martin_gale_counter}")
+            self.handle_messagee(f"Размер депозита был изменен и составляет: {depo}\n Tекущий Мартин Гейл счетчик равен {cur_martin_gale_counter}\n Кредитное плечо: {self.lev_size}")
         return depo, cur_martin_gale_counter
     
     def is_martin_gale_true_template(self):
         total_usdt_ammount = None
-        if self.martin_gale_flag:   
-            total_usdt_ammount = self.get_total_balance('USDT')
-            # print(total_usdt_ammount)
-            if total_usdt_ammount is not None and isinstance(total_usdt_ammount, float):
-                self.max_martin_gale_counter, self.total_potential_losses = self.max_martin_gale_counter_func(self.depo, self.static_stop_loss_ratio_val, total_usdt_ammount, self.martin_gale_ratio, self.lev_size)           
-                self.handle_messagee(f"Можем умножать депозит по Мартин Гейлу {self.max_martin_gale_counter} раз")       
-                self.handle_messagee(f"Потенциально максимальный убыток в случае худшего сценария Мартин Гейла: {self.total_potential_losses} usdt")
-            elif total_usdt_ammount == 0:
-                self.handle_messagee(f"Баланс usdt = 0. Нет возможности произвести расчеты Мартин Гейла")     
-            else:
-                self.handle_messagee(f"Не удалось получить данные баланса")
+        total_usdt_ammount = self.get_total_balance('USDT')
+        # print(total_usdt_ammount)
+        if total_usdt_ammount is not None and isinstance(total_usdt_ammount, float):
+            self.max_martin_gale_counter, self.total_potential_losses = self.max_martin_gale_counter_func(self.depo, self.static_stop_loss_ratio_val, total_usdt_ammount, self.martin_gale_ratio, self.lev_size)           
+            self.handle_messagee(f"Можем умножать депозит по Мартин Гейлу {self.max_martin_gale_counter} раз")       
+            self.handle_messagee(f"Потенциально максимальный убыток в случае худшего сценария Мартин Гейла: {self.total_potential_losses} usdt")
+        elif total_usdt_ammount == 0:
+            self.handle_messagee(f"Баланс usdt = 0. Нет возможности произвести расчеты Мартин Гейла")     
+        else:
+            self.handle_messagee(f"Не удалось получить данные баланса")
                 
 # python -m RISK_MANAGMENT.martin_galee

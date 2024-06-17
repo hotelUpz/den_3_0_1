@@ -123,21 +123,41 @@ class UTILS(COInN_FILTERR):
 
         next_interval = math.ceil(current_time / time_in_seconds) * time_in_seconds
         wait_time = next_interval - current_time
-        return int(wait_time)    
-    
+        return int(wait_time)
+
+    def count_decimal_places(self, number):
+        if isinstance(number, (int, float)):
+            # Преобразуем число в строку
+            number_str = f'{number:.10f}'.rstrip('0')
+            # Проверяем наличие десятичной точки
+            if '.' in number_str:
+                # Возвращаем количество знаков после запятой
+                return len(number_str.split('.')[1])
+        return 0  
+
     def usdt_to_qnt_converter(self, symbol, depo, symbol_info, cur_price):
         symbol_data = next((item for item in symbol_info["symbols"] if item['symbol'] == symbol), None)
-        # print(symbol_data)
-        # //////////////////////
+        if not symbol_data:
+            return "Symbol not found", None, None
+
         quantity_precision = int(float(symbol_data['quantityPrecision']))
-        price_precision = int(float(symbol_data['pricePrecision']))
-        # print(f"quantity_precision: {quantity_precision}")
-        min_notional = int(float(next((f['notional'] for f in symbol_data['filters'] if f['filterType'] == 'MIN_NOTIONAL'), 0)))
+        price_precision_market = int(float(symbol_data['pricePrecision']))
+
+        price_precision_limit = price_precision_market 
+        for filter_data in symbol_data['filters']:
+            if filter_data['filterType'] == 'PRICE_FILTER':
+                price_precision_limit = float(filter_data.get('tickSize', 1.0))
+                price_precision_limit = self.count_decimal_places(price_precision_limit)
+
+        min_notional = float(next((f['notional'] for f in symbol_data['filters'] if f['filterType'] == 'MIN_NOTIONAL'), 0))
         if depo <= min_notional:
             depo = min_notional
+
         if (quantity_precision == 0 and (depo / cur_price) < 1) or depo < 5:
-            return "Too_litle_size", None            
-        return round(depo / cur_price, quantity_precision), price_precision    
+            return "Too_little_size", None, None
+
+        quantity = round(depo / cur_price, quantity_precision)
+        return quantity, price_precision_market, price_precision_limit
     
     def from_anomal_view_to_normal(self, strange_list):
         normal_list = [] 
@@ -162,3 +182,10 @@ class UTILS(COInN_FILTERR):
             target_time = self.get_next_show_statistic_time()             
             return True, target_time          
         return False, target_time
+    
+# u = UTILS()
+# symbol_info = u.get_excangeInfo()
+# cur_price = u.get_klines('LDOUSDT', u.interval, 2).get("Close", None).iloc[-1]
+# print(cur_price)
+# symbol, depo = 'LDOUSDT', 10, 
+# print(u.usdt_to_qnt_converter(symbol, depo, symbol_info, cur_price))

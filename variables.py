@@ -1,16 +1,12 @@
-from SETTINGS import SETTINGSS
+from SEC_SETTINGS import SEC_SETTINGSS
 # from HIDDEN.config import *
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
-class PARAMS(SETTINGSS):
+class PARAMS(SEC_SETTINGSS):
     def __init__(self) -> None:
         super().__init__()
-        # print("init VARIABLES")
-        self.symbol = None   
-        self.vpvr_level_line = None
-        self.candidate_symbols_list = [] 
         self.market_place = 'binance'
         self.default_tg_vars()
         self.init_some_params()
@@ -48,6 +44,11 @@ class PARAMS(SETTINGSS):
         }
 
     def init_main_file_variables(self):
+        self.symbol = None   
+        self.vpvr_level_line = None
+        self.start_depo = self.depo
+        self.lev_size_default = self.lev_size
+        self.candidate_symbols_list = [] 
         self.current_signal_val = None
         self.last_signal_val = None
         self.in_position = False 
@@ -56,12 +57,13 @@ class PARAMS(SETTINGSS):
         self.is_first_position = True  
         self.create_order_success_flag = False
         self.is_no_signal_counter = 0
-        self.show_absent_or_signal_every = 20
+        self.show_absent_signal_interval = 20
         self.cur_price = None
         self.enter_price = None
         self.last_enter_price = None
         self.qty = None
         self.price_precession = None
+        self.price_precession_limit = None
         self.total_potential_losses = 0
         self.losses_counter = 0
         self.is_trailing_stop_start = False
@@ -74,12 +76,13 @@ class PARAMS(SETTINGSS):
         self.last_date = None
         self.cur_date = None
         self.is_time_to_show_done = False
+        self.sl_risk_reward_multiplier, self.tp_risk_reward_multiplier = None, None
+        self.sl_order_id, self.tp_order_id = None, None
 
     def init_some_params(self):
         # ////////////////////// некоторые переменные:
         self.wait_candle_flag = True
         self.cur_klines_data = None
-        self.direction = None 
         self.was_change_leverage_true = False
         self.cur_martin_gale_counter = 0
         self.black_coins_list = self.default_black_coins_list
@@ -118,6 +121,7 @@ class PARAMS(SETTINGSS):
         self.seq_control_token = os.getenv("ACESS_TOKEN", "")
         self.proxy_host = os.getenv("proxy_host", "")
         self.proxy_port = os.getenv("proxy_port", "")
+        self.proxy_socks5_port = os.getenv("proxy_socks5_port", "")
         self.proxy_username = os.getenv("proxy_username", "")
         self.proxy_password = os.getenv("proxy_password", "")
         # ////////////////////// инициализация ключей: ///////////////////////////////
