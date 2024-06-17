@@ -1,6 +1,6 @@
-numpy
 pandas
 pandas-ta
+numpy
 python-dotenv
 pyTelegramBotAPI
 requests

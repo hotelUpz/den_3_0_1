@@ -1,3 +1,6 @@
+# from numpy import NaN as npNaN
+import numpy as np
+npNaN = np.nan
 import pandas as pd
 import pandas_ta as ta
 from tradingview_ta import get_multiple_analysis
