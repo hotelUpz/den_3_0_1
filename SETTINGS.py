@@ -1,4 +1,4 @@
-is_terminal_only = 1 # только терминал/тг бот + терминал (1/0)
+is_terminal_only = 0 # только терминал/тг бот + терминал (1/0)
 
 class SETTINGSS():
     def __init__(self) -> None:
@@ -7,7 +7,7 @@ class SETTINGSS():
         self.depo = 10 # депозит в USDT -- считатеся вместе с кредитным плечом. Если == 1000 и кредитное плечо равно 10 то ваших денег == 1000/ 10 то есть 100
         self.lev_size = 1 # размер кредитного плеча
         self.margin_type = 'ISOLATED' # CROSS (изолированная маржа или кросс маржа. Изолированная по дефолту)
-        self.secondary_orders_type = 2 # 1/2:  'TAKE_PROFIT_MARKET'/'LIMIT'
+        self.secondary_orders_type = 1 # 1/2:  'TAKE_PROFIT_MARKET'/'LIMIT'
         
         # //////////////////////////// НАСТРОЙКИ ИНДИКАТОРА:
         self.indicators_strategy_number = 1 # номер стратегии индикаторов

@@ -138,10 +138,12 @@ class MAIN_CONTROLLER(ENGINS):
         empty_candidate_list_counter = 0
         engin_answ = None
         asnty_strategyy = "да" if self.is_reverse_signal == -1 else "нет"
+        is_proxyy = "да" if self.is_proxies_true else "нет"
         trade_params_mess = (
             f"Текущие параметры стратегии:\n"
             f"Стратегия индикатора: {self.indicators_strategy_number} -- {self.indicators_strategy_text_patterns[f'{self.indicators_strategy_number}']}\n"
             f"Антистратегия (противоположный сигнал): {asnty_strategyy}\n"
+            f"Прокси соединение: {is_proxyy}\n"            
             f"Стратегия TP/SL: {self.stop_loss_global_type_text_patterns[f'{self.stop_loss_global_type}']}\n"
             f"Способ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode_text_patterns[f'{self.stop_loss_ratio_mode}']}\n"
         )
