@@ -4,6 +4,7 @@ python-dotenv
 pyTelegramBotAPI
 requests
 aiohttp
+aiohttp[speedups]
 aiohttp_socks
 tradingview-ta
 # pip install pandas
