@@ -1,4 +1,4 @@
-is_terminal_only = 1 # только терминал/тг бот + терминал (1/0)
+is_terminal_only = 0 # только терминал/тг бот + терминал (1/0)
 
 class SETTINGSS():
     def __init__(self) -> None:
