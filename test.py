@@ -168,3 +168,36 @@
 #         asyncio.run(stop_logic_price_monitoring())
 
 # WEbss().trailing_tp_sl_shell()
+
+
+
+    # def cancel_order_by_id(self, symbol, orderId, retries=3):
+    #     attempt = 0
+    #     while attempt < retries:
+    #         try:
+    #             params = {
+    #                 'symbol': symbol,
+    #                 'orderId': orderId,
+    #                 'timestamp': int(time.time() * 1000)
+    #             }
+    #             params = self.get_signature(params)
+    #             resp = self.HTTP_request('other', self.cancel_order_url, method='DELETE',
+    #                                     headers=self.headers, params=params, proxies=self.proxiess)
+    #             if resp.status_code == 200:
+    #                 return resp
+    #         except Exception as ex:
+    #             print(f"Ошибка при отмене ордера {orderId}: {ex}")
+    #         attempt += 1
+    #         sleep(1)
+    #     return None
+
+    # def cancel_secondary_open_orders(self, symbol):
+    #     id_list = [self.sl_order_id, self.tp_order_id]
+    #     for orderId in id_list:
+    #         if orderId is not None:
+    #             resp = self.cancel_order_by_id(symbol, orderId)
+    #             if resp is not None:
+    #                 print(f"Ордер {orderId} успешно отменен.")
+    #             else:
+    #                 print(f"Не удалось отменить ордер {orderId}")
+    #     return

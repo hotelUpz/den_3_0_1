@@ -1,6 +1,6 @@
 from RISK_MANAGMENT.statistik_raport import STATISTIC
 import aiohttp
-from aiohttp_socks import ProxyConnector
+# from aiohttp_socks import ProxyConnector
 import asyncio
 import json
 import random
@@ -184,22 +184,23 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                 if sl_order_id:
                     # ////////// отменяем предыдущий стоп лосс:
                     cancel_order_answer = self.cancel_order_by_id(self.symbol, sl_order_id)
-                # ///////// устанавливаем следующий стоп лосс ордер:
-                sl_order_answer = self.make_order(
-                    self.symbol,
-                    qty,
-                    side,
-                    'STOP_MARKET',
-                    round(stop_loss_price, price_precession)
-                )       
+                    if cancel_order_answer is not None and cancel_order_answer.get('status', None) == 'CANCELED':
+                        # ///////// устанавливаем следующий стоп лосс ордер:
+                        sl_order_answer = self.make_order(
+                            self.symbol,
+                            qty,
+                            side,
+                            'STOP_MARKET',
+                            round(stop_loss_price, price_precession)
+                        )       
 
-                response_order_logger_answer = self.response_order_logger(
-                    sl_order_answer, 
-                    side, 
-                    'STOP_MARKET'
-                    )
-                is_problem_to_moved_sl = not response_order_logger_answer
-                sl_order_id = sl_order_answer.get('orderId', None)
+                        response_order_logger_answer = self.response_order_logger(
+                            sl_order_answer, 
+                            side, 
+                            'STOP_MARKET'
+                            )
+                        sl_order_id = sl_order_answer.get('orderId', None)
+                        is_problem_to_moved_sl = (not response_order_logger_answer) or (sl_order_id is None)                        
 
         return stop_loss_step_counter, trigger_step_counter, sl_order_id, next_trigger_price, is_problem_to_moved_sl
     
@@ -209,7 +210,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             # /////////////////////////////////////  
             url = 'wss://stream.binance.com:9443/ws/'
             # /////////////////////////////////////
-            max_retries = 10
+            max_retries = 3
             retry_delay = 1  # seconds
             retries = 0
             # /////////////////////////////////////
@@ -223,16 +224,17 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             # /////////////////////////////////////
             while retries < max_retries:            
                 try:
-                    if self.is_proxies_true:
-                        connector = ProxyConnector.from_url(f'socks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}')
-                    async with aiohttp.ClientSession(connector=connector if self.is_proxies_true else None) as session:
+                    # if self.is_proxies_true:
+                    #     connector = ProxyConnector.from_url(f'socks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}')
+                    # (connector=connector if self.is_proxies_true else None)
+                    async with aiohttp.ClientSession() as session:
                         async with session.ws_connect(url + f"{self.symbol}@kline_1s") as ws:
                             subscribe_request = {
                                 "method": "SUBSCRIBE",
                                 "params": [f"{self.symbol.lower()}@kline_1s"],
                                 "id": random.randrange(11,111111)
                             }
-                            # print('Stop_logic_price_monitoring start processing!')                       
+                            print('Stop_logic_price_monitoring start processing!')                     
                             try:
                                 await ws.send_json(subscribe_request)
                             except:

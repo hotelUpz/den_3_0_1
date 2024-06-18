@@ -1,4 +1,4 @@
-is_terminal_only = 0 # только терминал/тг бот + терминал (1/0)
+is_terminal_only = 1 # только терминал/тг бот + терминал (1/0)
 
 class SETTINGSS():
     def __init__(self) -> None:
@@ -40,8 +40,8 @@ class SETTINGSS():
             # Короткая EMA: 50, Длинная EMA: 200
 
             # Короткая EMA: 7, Длинная EMA: 40
-        self.ema1_period = 50 # - длина короткой волны
-        self.ema2_period = 200 # - длина длинной волны
+        self.ema1_period = 15 # - длина короткой волны
+        self.ema2_period = 60 # - длина длинной волны
         self.ema_trend_line = 240 # - длинга тренда
         self.stoch_rsi_over_sell, self.stoch_rsi_over_buy = 30, 70 # уровни перепроданности и перекупленности стохастик-рси. Для стратегий индикатора 5 и 6 (self.indicators_strategy_number = 5 или self.indicators_strategy_number = 6)
 

@@ -8,6 +8,8 @@ class PARAMS(SEC_SETTINGSS):
     def __init__(self) -> None:
         super().__init__()
         self.market_place = 'binance'
+        self.order_id = None
+        self.sl_order_id, self.tp_order_id = None, None
         self.default_tg_vars()
         self.init_some_params()
         self.init_main_file_variables()
@@ -72,12 +74,10 @@ class PARAMS(SEC_SETTINGSS):
         self.stop_loss_multiplier = None 
         self.trigger_multiplier = None
         self.next_trigger_price = None
-        self.sl_order_id = None
         self.last_date = None
         self.cur_date = None
         self.is_time_to_show_done = False
         self.sl_risk_reward_multiplier, self.tp_risk_reward_multiplier = None, None
-        self.sl_order_id, self.tp_order_id = None, None
 
     def init_some_params(self):
         # ////////////////////// некоторые переменные:

@@ -1,5 +1,6 @@
 from log import Total_Logger
 import time
+from time import sleep
 import pandas as pd
 import hmac
 import hashlib
@@ -72,13 +73,13 @@ class BINANCE_API(Total_Logger):
                     if target == 'place_order':
                         if response.status_code != 200:
                             self.handle_exception(f"Ошибка запроса при попытке создания ордера. Файл api_binance.py: {response.status_code}\nТекст ошибки:\n{response.json()}")                      
-                            time.sleep((i+1) * multiplier)
+                            sleep((i+1) * multiplier)
                             continue
                     return response.json()
                 continue
             except Exception as ex:
                 self.handle_exception(f"Файл api_binance.py: {ex}") 
-                time.sleep((i+1) * multiplier)
+                sleep((i+1) * multiplier)
 
         return None    
 
@@ -146,7 +147,7 @@ class BINANCE_API(Total_Logger):
         if positions.status_code == 200:    
             positions = positions.json()                        
             for position in positions:
-                if position['symbol'] == symbol and float(position['positionAmt']) != 0:
+                if position['symbol'] == symbol and float(position['positionAmt']) != 0 and position['orderId'] == self.order_id:
                     return   
             return True        
         return
@@ -196,6 +197,7 @@ class BINANCE_API(Total_Logger):
         params = {
             'symbol': symbol,
             'orderId': orderId,
+            'recvWindow': 20000,
             'timestamp': int(time.time() * 1000)
         }
 
@@ -212,5 +214,5 @@ class BINANCE_API(Total_Logger):
                     resp = self.cancel_order_by_id(symbol, orderId)
                 except Exception as ex:
                     pass
-                # print(resp)
+                print(resp)
         return

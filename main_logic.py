@@ -23,6 +23,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 self.last_signal_val = None
                 self.wait_candle_flag = True
                 self.sl_risk_reward_multiplier = None
+                self.order_id = None
                 self.sl_order_id, self.tp_order_id = None, None
                 return True      
             # /////////////// проверка открыта ли позиция:
@@ -36,6 +37,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     self.last_signal_val = None
                     self.wait_candle_flag = True
                     self.sl_risk_reward_multiplier = None
+                    self.order_id = None
                     self.sl_order_id, self.tp_order_id = None, None
                     msg = "Бот ищет следующий сигнал"
                     self.handle_messagee(msg)

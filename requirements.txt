@@ -1,12 +1,12 @@
 pandas
 pandas-ta
-numpy
+# numpy
 python-dotenv
 pyTelegramBotAPI
 requests
 aiohttp
-aiohttp[speedups]
-aiohttp_socks
+# aiohttp[speedups]
+# aiohttp_socks
 tradingview-ta
 # pip install pandas
 # pip install pandas-ta
@@ -14,4 +14,5 @@ tradingview-ta
 # pip install python-dotenv
 # pip install requests
 # pip install aiohttp
+# pip install aiohttp_socks
 # pip install tradingview-ta

@@ -1,6 +1,6 @@
 # from numpy import NaN as npNaN
-import numpy as np
-npNaN = np.nan
+# import numpy as np
+# npNaN = np.nan
 import pandas as pd
 import pandas_ta as ta
 from tradingview_ta import get_multiple_analysis
@@ -198,11 +198,14 @@ class INDICATORS_STRATEGYY(INDICATORS):
                         if 'ema_crossover' in strategy_list: 
                             ema_crossover_defender_val = ema_crossover_defender(df)                       
                             if ema_crossover_defender_val == "L":
-                                # print(f"ema_crossover signals_assum += 1")
+                                print(f"ema_crossover signals_assum += 1")
                                 signals_assum += 1  
                             elif ema_crossover_defender_val == "S":
-                                # print(f"ema_crossover signals_assum -= 1")
+                                print(f"ema_crossover signals_assum -= 1")
                                 signals_assum -= 1
+                            else:
+                                print(f"ema_crossover signals_assum: None")
+
 
                         if 'trend_line' in strategy_list:
                             trend_line_defender_val = trend_line_defender(df)

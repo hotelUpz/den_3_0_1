@@ -53,6 +53,7 @@ class TEMPLATES(INFO):
                 self.set_trade_nessasareses_templates()
             try:
                 order_answer = self.make_order(self.symbol, qty, side, market_type, target_price)
+                self.order_id = order_answer.get('orderId', None)
                 response_list.append(order_answer)
             except Exception as ex:
                 self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")  
@@ -101,7 +102,7 @@ class TEMPLATES(INFO):
     
     def for_set_stops_orders_temp(self, response_trading_list, qty, cur_price):
         executed_qty = float(response_trading_list[0].get('executedQty', qty))
-        self.last_enter_price = enter_price = float(response_trading_list[0].get('avgPrice', cur_price))
+        self.last_enter_price = enter_price = float(response_trading_list[0].get('avgPrice', cur_price))        
         self.handle_messagee(f"qty, enter_price:\n{executed_qty}, {enter_price}")
         # self.from_anomal_view_to_normal([executed_qty, enter_price])  
         return enter_price, executed_qty
