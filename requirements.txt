@@ -1,25 +1,19 @@
-pandas==1.3.5
-pandas-ta==0.2.45b
-numpy==1.22.3
-python-dotenv==0.19.2
-pyTelegramBotAPI==4.0.11
-requests==2.26.0
-aiohttp==3.8.1
-# pandas
+pandas
 # pandas-ta
-# # numpy
-# python-dotenv
-# pyTelegramBotAPI
-# requests
-# aiohttp
-# # aiohttp[speedups]
-# # aiohttp_socks
-# tradingview-ta
-# # pip install pandas
-# # pip install pandas-ta
-# # pip install pyTelegramBotAPI
-# # pip install python-dotenv
-# # pip install requests
-# # pip install aiohttp
-# # pip install aiohttp_socks
-# # pip install tradingview-ta
+ta
+# numpy
+python-dotenv
+pyTelegramBotAPI
+requests
+aiohttp
+# aiohttp[speedups]
+# aiohttp_socks
+tradingview-ta
+# pip install pandas
+# pip install pandas-ta
+# pip install pyTelegramBotAPI
+# pip install python-dotenv
+# pip install requests
+# pip install aiohttp
+# pip install aiohttp_socks
+# pip install tradingview-ta

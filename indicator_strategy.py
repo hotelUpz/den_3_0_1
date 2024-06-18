@@ -1,5 +1,6 @@
 import pandas as pd
-import pandas_ta as ta
+# import pandas_ta as ta
+import ta
 from tradingview_ta import get_multiple_analysis
 from random import choice
 from api_binance import BINANCE_API
@@ -28,23 +29,44 @@ class INDICATORS(BINANCE_API):
         """
 
     def calculate_ema(self, data, ema1_period, ema2_period, ema3_period):
-        data[f"EMA{ema1_period}"] = ta.ema(data['Close'], length=ema1_period)
-        data[f"EMA{ema2_period}"] = ta.ema(data['Close'], length=ema2_period)
-        data[f"EMA{ema3_period}"] = ta.ema(data['Close'], length=ema3_period) 
+        data[f"EMA{ema1_period}"] = ta.trend.ema_indicator(data['Close'], window=ema1_period)
+        data[f"EMA{ema2_period}"] = ta.trend.ema_indicator(data['Close'], window=ema2_period)
+        data[f"EMA{ema3_period}"] = ta.trend.ema_indicator(data['Close'], window=ema3_period) 
         data.dropna(inplace=True)
         return data
-    
+
     def calculate_stoch_rsi(self, data):
-        stoch_rsi = ta.stochrsi(data['Close'], length=14, rsi_length=14, k=3, d=3)
-        data['StochRSI_%K'] = stoch_rsi['STOCHRSIk_14_14_3_3']
-        data['StochRSI_%D'] = stoch_rsi['STOCHRSId_14_14_3_3']
-        data.dropna(inplace=True)
-        return data 
-    
+        return ta.momentum.stochrsi(data['Close'], window=14, smooth1=3, smooth2=3)
+        # print()
+        # data['StochRSI_%K'] = stoch_rsi['STOCHRSIk_14_3_3']
+        # data['StochRSI_%D'] = stoch_rsi['STOCHRSId_14_3_3']
+        # data.dropna(inplace=True)
+        # return data
+
     def calculate_atr(self, data, atr_period):
         data[f"ATR{atr_period}"] = ta.atr(data['High'], data['Low'], data['Close'], length=atr_period)
         data.dropna(inplace=True)
         return data, data[f"ATR{atr_period}"].iloc[-1]
+
+
+    # def calculate_ema(self, data, ema1_period, ema2_period, ema3_period):
+    #     data[f"EMA{ema1_period}"] = ta.ema(data['Close'], length=ema1_period)
+    #     data[f"EMA{ema2_period}"] = ta.ema(data['Close'], length=ema2_period)
+    #     data[f"EMA{ema3_period}"] = ta.ema(data['Close'], length=ema3_period) 
+    #     data.dropna(inplace=True)
+    #     return data
+    
+    # def calculate_stoch_rsi(self, data):
+    #     stoch_rsi = ta.stochrsi(data['Close'], length=14, rsi_length=14, k=3, d=3)
+    #     data['StochRSI_%K'] = stoch_rsi['STOCHRSIk_14_14_3_3']
+    #     data['StochRSI_%D'] = stoch_rsi['STOCHRSId_14_14_3_3']
+    #     data.dropna(inplace=True)
+    #     return data 
+    
+    # def calculate_atr(self, data, atr_period):
+    #     data[f"ATR{atr_period}"] = ta.atr(data['High'], data['Low'], data['Close'], length=atr_period)
+    #     data.dropna(inplace=True)
+    #     return data, data[f"ATR{atr_period}"].iloc[-1]
     
     def calculate_vpvr(self, data, min_bins=10, max_bins=50):
         # Вычисляем динамическое количество корзин (bins) на основе количества свечей
@@ -270,3 +292,10 @@ class INDICATORS_STRATEGYY(INDICATORS):
                 time.sleep(0.05)
 
         return None, None, None, None
+    
+# indnd = INDICATORS()
+
+# data = indnd.get_klines('BTCUSDT', '1m', 240)
+# # new_data = indnd.calculate_ema(data, 5, 20, 240)
+# new_data = indnd.calculate_stoch_rsi(data)
+# print(new_data)
