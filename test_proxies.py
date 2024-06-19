@@ -10,9 +10,9 @@ proxy_url = f'http://{proxy_username}:{proxy_password}@{proxy_host}:{proxy_port}
 proxy_soks5_url = f'soks5://{proxy_username}:{proxy_password}@{proxy_host}:{proxy_socks5_port}'
 
 proxies = {
-    # 'http': proxy_url,
+    'http': proxy_url,
     # 'https': proxy_url,
-    "socks5": proxy_soks5_url
+    # "socks5": proxy_soks5_url
 }
 
 try:

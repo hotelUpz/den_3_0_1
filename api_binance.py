@@ -39,7 +39,7 @@ class BINANCE_API(Total_Logger):
         self.proxy_url = f'http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}'
         self.proxiess = {
             'http': self.proxy_url,
-            'https': self.proxy_url
+            # 'https': self.proxy_url
         }
         # устанавливаем функциии декораторы
         self.get_signature = self.log_exceptions_decorator(self.get_signature)
