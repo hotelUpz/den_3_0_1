@@ -39,8 +39,9 @@ class BINANCE_API(Total_Logger):
         self.proxy_url = f'http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}'
         self.proxiess = {
             'http': self.proxy_url,
-            # 'https': self.proxy_url
+            'https': self.proxy_url
         }
+        self.session = self.create_session()
         # устанавливаем функциии декораторы
         self.get_signature = self.log_exceptions_decorator(self.get_signature)
         self.HTTP_request = self.log_exceptions_decorator(self.HTTP_request)
@@ -56,6 +57,15 @@ class BINANCE_API(Total_Logger):
         # self.tralling_stop_order = self.log_exceptions_decorator(self.tralling_stop_order)
         self.cancel_secondary_open_orders = self.log_exceptions_decorator(self.cancel_secondary_open_orders)
         self.cancel_order_by_id = self.log_exceptions_decorator(self.cancel_order_by_id)
+
+    def create_session(self):
+        session = requests.Session()
+        session.proxies = {
+            'http': self.proxy_url,
+            'https': self.proxy_url
+        }
+        session.headers.update(self.headers)
+        return session
 
     def get_signature(self, params):
         params['timestamp'] = int(time.time() *1000)
@@ -73,7 +83,8 @@ class BINANCE_API(Total_Logger):
                 if not self.is_proxies_true:
                     kwargs.pop('proxies', None)
 
-                response = requests.request(url=url, **kwargs)
+                # response = requests.request(url=url, **kwargs)
+                response = self.session.request(url=url, **kwargs)
                 # print(f"binance: {response}")
                 # print(response.json())
                 if response is not None:
@@ -95,19 +106,19 @@ class BINANCE_API(Total_Logger):
         params = {
             'recvWindow': 20000
         }  
-        return self.HTTP_request('other', self.exchangeInfo_url, method='GET', headers=self.headers, params=params, proxies=self.proxiess)    
+        return self.HTTP_request('other', self.exchangeInfo_url, method='GET', headers=self.headers, params=params)    
    
     def get_all_tickers(self): 
         params = {
             'recvWindow': 20000
         }       
-        return self.HTTP_request('other', self.all_tikers_url, method='GET', headers=self.headers, params=params, proxies=self.proxiess)
+        return self.HTTP_request('other', self.all_tikers_url, method='GET', headers=self.headers, params=params)
    
     def get_total_balance(self, ticker):
         params = {}
         params['recvWindow'] = 20000
         params = self.get_signature(params)
-        current_balance = self.HTTP_request('other', self.balance_url, method='GET', headers=self.headers, params=params, proxies=self.proxiess)
+        current_balance = self.HTTP_request('other', self.balance_url, method='GET', headers=self.headers, params=params)
         return float([x['balance'] for x in current_balance if x['asset'] == ticker][0])
    
     def get_all_orders(self, symbol):
@@ -117,7 +128,7 @@ class BINANCE_API(Total_Logger):
             # 'limit': limit
         }
         params = self.get_signature(params)
-        resp = self.HTTP_request('other', self.get_all_orders_url, method='GET', headers=self.headers, params=params, proxies=self.proxiess)
+        resp = self.HTTP_request('other', self.get_all_orders_url, method='GET', headers=self.headers, params=params)
         # print(resp)
         return resp
        
@@ -129,7 +140,7 @@ class BINANCE_API(Total_Logger):
         params["interval"] = interval
         params["limit"] = int(periodd*2.1)
         params = self.get_signature(params)
-        klines = self.HTTP_request('other', self.klines_url, method='GET', headers=self.headers, params=params, proxies=self.proxiess)
+        klines = self.HTTP_request('other', self.klines_url, method='GET', headers=self.headers, params=params)
         if klines:
             data = pd.DataFrame(klines).iloc[:, :6]
             data.columns = ['Time', 'Open', 'High', 'Low', 'Close', 'Volume']
@@ -149,7 +160,7 @@ class BINANCE_API(Total_Logger):
             self.positions_url, 
             headers=self.headers, 
             params=params, 
-            proxies=self.proxiess if self.is_proxies_true else None
+            proxies=self.proxies if self.is_proxies_true else None
         )
         if positions.status_code == 200:
             positions = positions.json()                        
@@ -168,7 +179,7 @@ class BINANCE_API(Total_Logger):
         params['recvWindow'] = 20000
         params['newClientOrderId'] = 'CHANGE_MARGIN_TYPE'       
         params = self.get_signature(params)
-        return self.HTTP_request('other', self.set_margin_type_url, method='POST', headers=self.headers, params=params, proxies=self.proxiess)        
+        return self.HTTP_request('other', self.set_margin_type_url, method='POST', headers=self.headers, params=params)        
    
     def set_leverage(self, symbol, lev_size):                     
         params = {}
@@ -177,7 +188,7 @@ class BINANCE_API(Total_Logger):
         params['leverage'] = lev_size
         params = self.get_signature(params)
         # print(params)
-        return self.HTTP_request('other', self.set_leverage_url, method='POST', headers=self.headers, params=params, proxies=self.proxiess)
+        return self.HTTP_request('other', self.set_leverage_url, method='POST', headers=self.headers, params=params)
    
     def make_order(self, symbol, qty, side, market_type, target_price): 
         # print(symbol, qty, side, market_type, target_price)
@@ -195,7 +206,7 @@ class BINANCE_API(Total_Logger):
         params["side"] = side
         params['newOrderRespType'] = 'RESULT' # default 'ASK'
         params = self.get_signature(params)
-        resp = self.HTTP_request('place_order', self.create_order_url, method='POST', headers=self.headers, params=params, proxies=self.proxiess)
+        resp = self.HTTP_request('place_order', self.create_order_url, method='POST', headers=self.headers, params=params)
         # print(resp)
         return resp
 
@@ -210,7 +221,7 @@ class BINANCE_API(Total_Logger):
         }
 
         params = self.get_signature(params)
-        resp = self.HTTP_request('other', self.cancel_order_url, method='DELETE', headers=self.headers, params=params, proxies=self.proxiess)
+        resp = self.HTTP_request('other', self.cancel_order_url, method='DELETE', headers=self.headers, params=params)
         return resp 
     
     def cancel_secondary_open_orders(self, symbol):
