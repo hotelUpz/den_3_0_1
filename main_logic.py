@@ -182,9 +182,11 @@ class MAIN_CONTROLLER(ENGINS):
             f"Тайм фрейм: {self.interval}\n"
             f"Соотношение риска к прибыли: {self.risk_reward_ratio}\n"
             f"Мартин Гейл {martin_gale_status}\n"
-        )       
+        )
         
         if self.martin_gale_flag:
+            if self.losses_until_value <= self.max_martin_gale_counter:
+                self.losses_until_value = self.max_martin_gale_counter + 1
             martin_gale_auto_countt = "да" if self.max_martin_gale_counter_auto_true == 1 else "нет"
             play_by_leveragee = "да" if self.play_by_leverage == 1 else "нет"
             if self.martin_gale_flag and self.max_martin_gale_counter_auto_true:
