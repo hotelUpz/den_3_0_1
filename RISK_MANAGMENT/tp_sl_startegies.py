@@ -165,17 +165,30 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
         return stop_loss_ratio
     
 # //////////////// trailing sl:
-    def trailing_sl_engin(self, cur_price, qty, enter_price, stop_loss_ratio, stop_loss_step_counter, trigger_step_counter, next_trigger_price, sl_order_id, is_problem_to_moved_sl, price_precession, sl_risk_reward_multiplier, last_signal_val): 
+    def trailing_sl_engin(self, cur_price, qty, enter_price, stop_loss_ratio, stop_loss_step_counter, trigger_step_counter, next_trigger_price, sl_order_id, is_problem_to_moved_sl, price_precession, sl_risk_reward_multiplier, last_signal_val, last_stop_loss_price): 
         if cur_price:
-            jump_next_trigger_price_condition = False    
+            jump_next_trigger_price_condition = False
+            tp_condition = False
+            sl_condition = False
 
-            jump_next_trigger_price_condition = cur_price >= next_trigger_price if (last_signal_val == 1) else cur_price <= next_trigger_price
+            if last_signal_val == 1:
+                jump_next_trigger_price_condition = cur_price >= next_trigger_price 
+                tp_condition = cur_price >= self.target_tp_price
+                sl_condition = cur_price <= last_stop_loss_price
+            else:
+                jump_next_trigger_price_condition = cur_price <= next_trigger_price 
+                tp_condition = cur_price <= self.target_tp_price
+                sl_condition = cur_price >= last_stop_loss_price
+            
+            if tp_condition or sl_condition:
+                return stop_loss_step_counter, trigger_step_counter, sl_order_id, next_trigger_price, is_problem_to_moved_sl, True, last_stop_loss_price
 
             if jump_next_trigger_price_condition:
+                # print("jump_next_trigger_price_condition")
                 stop_loss_step_counter += 1
                 trigger_step_counter += 1
             
-                stop_loss_price = enter_price * (1 + last_signal_val * stop_loss_ratio * sl_risk_reward_multiplier * stop_loss_step_counter)
+                last_stop_loss_price = stop_loss_price = enter_price * (1 + last_signal_val * stop_loss_ratio * sl_risk_reward_multiplier * stop_loss_step_counter)
                 next_trigger_price = enter_price * (1 + last_signal_val * stop_loss_ratio * sl_risk_reward_multiplier * trigger_step_counter)
                 
                 pies_of_frase = "Двигаем стоп лосс на:"
@@ -194,15 +207,17 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                             round(stop_loss_price, price_precession)
                         )       
 
-                        response_order_logger_answer = self.response_order_logger(
-                            sl_order_answer, 
-                            side, 
-                            'STOP_MARKET'
-                            )
-                        sl_order_id = sl_order_answer.get('orderId', None)
-                        is_problem_to_moved_sl = (not response_order_logger_answer) or (sl_order_id is None)                        
+                        # response_order_logger_answer = self.response_order_logger(
+                        #     sl_order_answer, 
+                        #     side, 
+                        #     'STOP_MARKET'
+                        #     )
 
-        return stop_loss_step_counter, trigger_step_counter, sl_order_id, next_trigger_price, is_problem_to_moved_sl
+                        sl_order_id = sl_order_answer.get('orderId', None)
+                        # is_problem_to_moved_sl = (not response_order_logger_answer) or (sl_order_id is None)    
+                        is_problem_to_moved_sl = (sl_order_id is None)                        
+
+        return stop_loss_step_counter, trigger_step_counter, sl_order_id, next_trigger_price, is_problem_to_moved_sl, False, last_stop_loss_price
     
     def trailing_tp_sl_shell(self, qty, enter_price, stop_loss_ratio, price_precession, last_signal_val, sl_risk_reward_multiplier, sl_order_id):
         async def stop_logic_price_monitoring(qty, enter_price, stop_loss_ratio, price_precession, last_signal_val, sl_risk_reward_multiplier, sl_order_id):
@@ -216,18 +231,21 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             # /////////////////////////////////////
             seconds_counter = 0
             # /////////////////////////
-            is_problem_to_moved_sl = False       
+            is_problem_to_moved_sl = False
+            is_check_position = False     
             stop_loss_step_counter = -1
-            trigger_step_counter = 1           
+            trigger_step_counter = 1   
+            last_stop_loss_price = self.last_stop_loss_price        
             next_trigger_price = enter_price * (1 + (last_signal_val * stop_loss_ratio * trigger_step_counter))
             # print(f"next_trigger_price_220str: {next_trigger_price}")
             # /////////////////////////////////////
             while retries < max_retries:            
                 try:
+                    connectorr = None
                     if self.is_proxies_true:
-                        connector = ProxyConnector.from_url(f'socks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}')
+                        connectorr = ProxyConnector.from_url(f'socks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}')
                     
-                    async with aiohttp.ClientSession(connector=connector if self.is_proxies_true else None) as session:
+                    async with aiohttp.ClientSession(connector=connectorr) as session:
                         async with session.ws_connect(url + f"{self.symbol}@kline_1s") as ws:
                             subscribe_request = {
                                 "method": "SUBSCRIBE",
@@ -249,7 +267,8 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                             cur_price = float(kline_websocket_data.get('c'))
                                             # print(f"last_close_price: {last_close_price}")                              
                                             try:
-                                                if seconds_counter == 10:                                                 
+                                                if (seconds_counter == 10) or (is_check_position):
+                                                    # print("try to check is_close+pos_true")                                               
                                                     if self.is_closing_position_true(self.symbol):
                                                         self.sl_order_id = sl_order_id
                                                         self.close_position_utilites(
@@ -262,7 +281,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                                         return False                                                    
                                                     seconds_counter = 0
                                  
-                                                stop_loss_step_counter, trigger_step_counter, sl_order_id, next_trigger_price, is_problem_to_moved_sl = self.trailing_sl_engin(cur_price, qty, enter_price, stop_loss_ratio, stop_loss_step_counter, trigger_step_counter, next_trigger_price, sl_order_id, is_problem_to_moved_sl, price_precession, sl_risk_reward_multiplier, last_signal_val)
+                                                stop_loss_step_counter, trigger_step_counter, sl_order_id, next_trigger_price, is_problem_to_moved_sl, is_check_position, last_stop_loss_price = self.trailing_sl_engin(cur_price, qty, enter_price, stop_loss_ratio, stop_loss_step_counter, trigger_step_counter, next_trigger_price, sl_order_id, is_problem_to_moved_sl, price_precession, sl_risk_reward_multiplier, last_signal_val, last_stop_loss_price)
                                                  
                                                 seconds_counter += 1
                                             except Exception as ex:
@@ -298,11 +317,11 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             return
 
         sl_risk_reward_multiplier = float(self.risk_reward_ratio.split(':')[0].strip())     
-        target_sl_price = round((enter_price * (1 - current_signal_val * stop_loss_ratio * sl_risk_reward_multiplier)), self.price_precession)
+        self.last_stop_loss_price = target_sl_price = round((enter_price * (1 - current_signal_val * stop_loss_ratio * sl_risk_reward_multiplier)), self.price_precession)
         
         price_precession = self.price_precession_limit if self.secondary_orders_type == 2 else self.price_precession        
         tp_risk_reward_multiplier = float(self.risk_reward_ratio.split(':')[1].strip())
-        target_tp_price = round((enter_price * (1 + current_signal_val * stop_loss_ratio * tp_risk_reward_multiplier)), price_precession)
+        self.target_tp_price = target_tp_price = round((enter_price * (1 + current_signal_val * stop_loss_ratio * tp_risk_reward_multiplier)), price_precession)
 
         target_prices_list = [target_sl_price, target_tp_price]
 

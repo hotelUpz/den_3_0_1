@@ -7,11 +7,3 @@ aiohttp
 # aiohttp[speedups]
 aiohttp_socks
 tradingview-ta
-# pip install pandas
-# pip install pandas-ta
-# pip install pyTelegramBotAPI
-# pip install python-dotenv
-# pip install requests
-# pip install aiohttp
-# pip install aiohttp_socks
-# pip install tradingview-ta

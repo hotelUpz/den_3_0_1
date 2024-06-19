@@ -10,6 +10,8 @@ class PARAMS(SEC_SETTINGSS):
         self.market_place = 'binance'
         self.order_id = None
         self.sl_order_id, self.tp_order_id = None, None
+        self.target_tp_price = None
+        self.last_stop_loss_price = None
         self.default_tg_vars()
         self.init_some_params()
         self.init_main_file_variables()

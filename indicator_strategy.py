@@ -4,6 +4,9 @@ from tradingview_ta import get_multiple_analysis
 from random import choice
 from api_binance import BINANCE_API
 import time
+import os
+import inspect
+current_file = os.path.basename(__file__)
 
 class INDICATORS(BINANCE_API):
     def __init__(self) -> None:
@@ -97,7 +100,6 @@ class INDICATORS(BINANCE_API):
         data_copy.dropna(inplace=True)
 
         return data_copy, atr[-1]
-
 
     # def calculate_ema(self, data, ema1_period, ema2_period, ema3_period):
     #     data[f"EMA{ema1_period}"] = ta.ema(data['Close'], length=ema1_period)
@@ -247,7 +249,7 @@ class INDICATORS_STRATEGYY(INDICATORS):
                             if cur_signal == -1 and trend_line_defender_val == "S":                         
                                 return symbol, -1, cur_price, df
                     except Exception as ex:
-                        print(ex)
+                        # print(ex)
                         self.black_coins_list.append(symbol)
                         self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
 
@@ -262,7 +264,8 @@ class INDICATORS_STRATEGYY(INDICATORS):
                     df = self.get_klines(symbol, self.interval, ema3_period)
                     if isinstance(df, pd.DataFrame) and not df.empty:
                         df = self.calculate_ema(df, ema1_period, ema2_period, ema3_period)
-                        cur_price = df["Close"].iloc[-1]                 
+                        cur_price = df["Close"].iloc[-1]
+                        # print(f"cur_price: {cur_price}")           
                         
                         if 'ema_crossover' in strategy_list: 
                             ema_crossover_defender_val = ema_crossover_defender(df)                       
@@ -334,7 +337,8 @@ class INDICATORS_STRATEGYY(INDICATORS):
                         elif signals_assum < 0 and abs(signals_assum) == len(strategy_list):
                             return symbol, -1, cur_price, df
                 except Exception as ex:
-                    print(ex)
+                    # print(ex)
+                    # self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
                     self.black_coins_list.append(symbol)
                     self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
                 

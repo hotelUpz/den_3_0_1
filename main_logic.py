@@ -25,6 +25,8 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 self.sl_risk_reward_multiplier = None
                 self.order_id = None
                 self.sl_order_id, self.tp_order_id = None, None
+                self.last_stop_loss_price = None
+                self.target_tp_price = None
                 return True      
             # /////////////// проверка открыта ли позиция:
             if self.in_position:
@@ -39,24 +41,26 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     self.sl_risk_reward_multiplier = None
                     self.order_id = None
                     self.sl_order_id, self.tp_order_id = None, None
+                    self.last_stop_loss_price = None
+                    self.target_tp_price = None
                     msg = "Бот ищет следующий сигнал"
                     self.handle_messagee(msg)
                     return True
             else:                            
-                # # ////////////// ищем сигнал если закрыта:                
-                # start_time = int(time.time()*1000)
-                # print("начало поиска сигнала")
-                # print(f"coins_list_len: {len(coins_list)}")
+                # ////////////// ищем сигнал если закрыта:                
+                start_time = int(time.time()*1000)
+                print("начало поиска сигнала")
+                print(f"coins_list_len: {len(coins_list)}")
                 try:
                     self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy)
                 except Exception as ex: 
                     pass 
                     # self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = None, None, None, None                 
                     # self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
-                # delta_time = int((int(time.time()*1000) - start_time)/ 1000)
-                # print(f"конец поиска сигнала: {delta_time} сек")             
+                delta_time = int((int(time.time()*1000) - start_time)/ 1000)
+                print(f"конец поиска сигнала: {delta_time} сек")             
                 if not self.current_signal_val:                    
-                    # self.handle_messagee("нет сигнала")
+                    self.handle_messagee("нет сигнала")
                     self.is_no_signal_counter += 1
                     if self.is_no_signal_counter % self.show_absent_signal_interval == 0:
                         msg = f"Нет сигнала на протяжение {self.is_no_signal_counter} минут"
@@ -135,34 +139,52 @@ class MAIN_CONTROLLER(ENGINS):
     def __init__(self):  
         super().__init__()
 
-    def main_func(self):
-        # self.last_date = self.date_of_the_month()        
-        empty_candidate_list_counter = 0
-        engin_answ = None
+    def stratigiee_info(self):
         asnty_strategyy = "да" if self.is_reverse_signal == -1 else "нет"
         is_proxyy = "да" if self.is_proxies_true else "нет"
         trade_params_mess = (
             f"Текущие параметры стратегии:\n"
             f"Стратегия индикатора: {self.indicators_strategy_number} -- {self.indicators_strategy_text_patterns[f'{self.indicators_strategy_number}']}\n"
+        )
+
+        if self.indicators_strategy_number not in [8,9]:
+            trade_params_mess += (
+                f"Длина короткой EMA: {self.ema1_period}\n"
+                f"Длина длинной EMA: {self.ema2_period}\n"                
+            )
+
+        if self.indicators_strategy_number in [2, 4, 6, 7, 9]:
+            trade_params_mess += (
+                f"Длина тренда EMA: {self.ema_trend_line}\n"
+            )
+        if self.indicators_strategy_number in [5, 6]:
+            trade_params_mess += (
+                f"Уровень перепроданности stoch_rsi: {self.stoch_rsi_over_sell}\n"
+                f"Уровень перекупленности stoch_rsi: {self.stoch_rsi_over_buy}\n"
+            )
+        trade_params_mess += (
             f"Антистратегия (противоположный сигнал): {asnty_strategyy}\n"
             f"Прокси соединение: {is_proxyy}\n"            
-            f"Стратегия TP/SL: {self.stop_loss_global_type_text_patterns[f'{self.stop_loss_global_type}']}\n"
-            f"Способ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode_text_patterns[f'{self.stop_loss_ratio_mode}']}\n"
+            f"Стратегия TP/SL: {self.stop_loss_global_type} -- {self.stop_loss_global_type_text_patterns[f'{self.stop_loss_global_type}']}\n"
+            f"Способ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode} -- {self.stop_loss_ratio_mode_text_patterns[f'{self.stop_loss_ratio_mode}']}\n"
         )
 
         if self.stop_loss_ratio_mode == 1:
             trade_params_mess += f"Значение статического стоп лосс коэффициента: {self.static_stop_loss_ratio_val}\n"
+        else:
+            trade_params_mess += (
+                f"Минимальное значение стоп лосс коэффициента: {self.min_default_ratio}\n"
+                f"Максимальное значение стоп лосс коэффициента: {self.max_default_ratio}\n"
+            )
 
         martin_gale_status = "включен" if self.martin_gale_flag else "отключен"        
         trade_params_mess += (
-            f"Минимальное значение стоп лосс коэффициента: {self.min_default_ratio}\n"
-            f"Максимальное значение стоп лосс коэффициента: {self.max_default_ratio}\n"
             f"Тайм фрейм: {self.interval}\n"
             f"Соотношение риска к прибыли: {self.risk_reward_ratio}\n"
             f"Мартин Гейл {martin_gale_status}\n"
         )       
         
-        if martin_gale_status:
+        if self.martin_gale_flag:
             martin_gale_auto_countt = "да" if self.max_martin_gale_counter_auto_true == 1 else "нет"
             play_by_leveragee = "да" if self.play_by_leverage == 1 else "нет"
             if self.martin_gale_flag and self.max_martin_gale_counter_auto_true:
@@ -176,9 +198,14 @@ class MAIN_CONTROLLER(ENGINS):
 
         self.handle_messagee(trade_params_mess)
 
+    def main_func(self):
+        # self.last_date = self.date_of_the_month()        
+        empty_candidate_list_counter = 0
+        engin_answ = None
         get_coins_counter = 0
         get_coins_counter_reset_until = 30
         is_show_statistic_true, next_show_statistic_time = None, None
+        self.stratigiee_info()
         next_show_statistic_time = self.get_next_show_statistic_time()
 
         while True:

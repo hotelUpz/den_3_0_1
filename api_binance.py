@@ -31,11 +31,16 @@ class BINANCE_API(Total_Logger):
             'X-MBX-APIKEY': self.api_key
         }
 
-        self.proxy_url = f'http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}'
+        proxy_soks5_url = f'soks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}'
         self.proxiess = {
-            'http': self.proxy_url,
-            'https': self.proxy_url
+            "socks5": proxy_soks5_url
         }
+
+        # self.proxy_url = f'http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}'
+        # self.proxiess = {
+        #     'http': self.proxy_url,
+        #     'https': self.proxy_url
+        # }
         # устанавливаем функциии декораторы
         self.get_signature = self.log_exceptions_decorator(self.get_signature)
         self.HTTP_request = self.log_exceptions_decorator(self.HTTP_request)
@@ -147,7 +152,8 @@ class BINANCE_API(Total_Logger):
         if positions.status_code == 200:    
             positions = positions.json()                        
             for position in positions:
-                if position['symbol'] == symbol and float(position['positionAmt']) != 0 and position['orderId'] == self.order_id:
+                if position['symbol'] == symbol and float(position['positionAmt']) != 0:
+                    #  and position['orderId'] == self.order_id:
                     return   
             return True        
         return
@@ -207,12 +213,16 @@ class BINANCE_API(Total_Logger):
     
     def cancel_secondary_open_orders(self, symbol):
         id_list = [self.sl_order_id, self.tp_order_id]
-        print(f"id_list: {id_list}")
+        # print(f"id_list: {id_list}")
         for orderId in id_list:
             if orderId is not None:
                 try:
                     resp = self.cancel_order_by_id(symbol, orderId)
                 except Exception as ex:
                     pass
-                print(resp)
+                # print(resp)
         return
+    
+# ba = BINANCE_API()
+# kl = ba.get_klines('BTCUSDT', '1m', 240)
+# print(kl)
