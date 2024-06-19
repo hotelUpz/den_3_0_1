@@ -1,6 +1,6 @@
 from RISK_MANAGMENT.statistik_raport import STATISTIC
 import aiohttp
-from aiohttp_socks import ProxyConnector
+# from aiohttp_socks import ProxyConnector
 import asyncio
 import json
 import random
@@ -241,12 +241,14 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             # /////////////////////////////////////
             while retries < max_retries:            
                 try:
-                    connectorr = None
-                    if self.is_proxies_true:
-                        connectorr = ProxyConnector.from_url(f'socks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}')
+                    # connectorr = None
+                    # if self.is_proxies_true:
+                    #     connectorr = ProxyConnector.from_url(f'socks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}')
                     
-                    async with aiohttp.ClientSession(connector=connectorr) as session:
-                        async with session.ws_connect(url + f"{self.symbol}@kline_1s") as ws:
+                    # async with aiohttp.ClientSession(connector=connectorr) as session:
+                    #     async with session.ws_connect(url + f"{self.symbol}@kline_1s") as ws:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.ws_connect(url + f"{self.symbol}@kline_1s", proxy=self.proxy_url) as ws:
                             subscribe_request = {
                                 "method": "SUBSCRIBE",
                                 "params": [f"{self.symbol.lower()}@kline_1s"],
@@ -265,7 +267,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                         kline_websocket_data = data.get('k', {})
                                         if kline_websocket_data:
                                             cur_price = float(kline_websocket_data.get('c'))
-                                            # print(f"last_close_price: {last_close_price}")                              
+                                            print(f"last_close_price websocket: {cur_price}")                             
                                             try:
                                                 if (seconds_counter == 10) or (is_check_position):
                                                     # print("try to check is_close+pos_true")                                               

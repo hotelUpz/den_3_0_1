@@ -31,16 +31,16 @@ class BINANCE_API(Total_Logger):
             'X-MBX-APIKEY': self.api_key
         }
 
-        proxy_soks5_url = f'soks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}'
-        self.proxiess = {
-            "socks5": proxy_soks5_url
-        }
-
-        # self.proxy_url = f'http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}'
+        # proxy_soks5_url = f'soks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}'
         # self.proxiess = {
-        #     'http': self.proxy_url,
-        #     'https': self.proxy_url
+        #     "socks5": proxy_soks5_url
         # }
+
+        self.proxy_url = f'http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}'
+        self.proxiess = {
+            'http': self.proxy_url,
+            'https': self.proxy_url
+        }
         # устанавливаем функциии декораторы
         self.get_signature = self.log_exceptions_decorator(self.get_signature)
         self.HTTP_request = self.log_exceptions_decorator(self.HTTP_request)
@@ -74,8 +74,8 @@ class BINANCE_API(Total_Logger):
                     kwargs.pop('proxies', None)
 
                 response = requests.request(url=url, **kwargs)
-                print(response)
-                print(response.json())
+                print(f"binance: {response}")
+                # print(response.json())
                 if response is not None:
                     if target == 'place_order':
                         if response.status_code != 200:
