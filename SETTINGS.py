@@ -10,8 +10,8 @@ class SETTINGSS():
         self.secondary_orders_type = 1 # 1/2:  'TAKE_PROFIT_MARKET'/'LIMIT'
         
         # //////////////////////////// НАСТРОЙКИ ИНДИКАТОРА:
-        self.indicators_strategy_number = 1 # номер стратегии индикаторов
-        self.is_reverse_signal = -1 # Вкл/Выкл: -1/1 # использовать обратный сигнал. Если шорт то лонг и наоборот. Чтобы активировать введите значение -1 (минус один)
+        self.indicators_strategy_number = 2 # номер стратегии индикаторов
+        self.is_reverse_signal = 1 # Вкл/Выкл: -1/1 # использовать обратный сигнал. Если шорт то лонг и наоборот. Чтобы активировать введите значение -1 (минус один)
         # 1 -- 'ema_crossover': классическая стратегия прересечения двух ema (кроссовер)
         # 2 -- 'ema_crossover + trend_line': кроссовер ema плюс ориентироваться на линию тренда ema. Период равен ema_trend_line, cмотри ниже
         # 3 -- 'ema_crossover + stoch_rsi_crossover': ema кроссовер плюс кроссовер стохастик_рси
@@ -40,8 +40,8 @@ class SETTINGSS():
             # Короткая EMA: 20, Длинная EMA: 100
             # Короткая EMA: 50, Длинная EMA: 200
 
-        self.ema1_period = 50 # - длина короткой волны
-        self.ema2_period = 200 # - длина длинной волны
+        self.ema1_period = 13 # - длина короткой волны
+        self.ema2_period = 26 # - длина длинной волны
         self.ema_trend_line = 240 # - длинга тренда
         self.stoch_rsi_over_sell, self.stoch_rsi_over_buy = 30, 70 # уровни перепроданности и перекупленности стохастик-рси. Для стратегий индикатора 5 и 6 (self.indicators_strategy_number = 5 или self.indicators_strategy_number = 6)
 

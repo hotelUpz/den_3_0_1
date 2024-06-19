@@ -156,11 +156,12 @@ class BINANCE_API(Total_Logger):
             'recvWindow': 20000
         }
         params = self.get_signature(params)
+        # positions = self.HTTP_request('other', self.positions_url, method='GET', headers=self.headers, params=params)
         positions = requests.get(
             self.positions_url, 
             headers=self.headers, 
             params=params, 
-            proxies=self.proxies if self.is_proxies_true else None
+            proxies=self.proxiess if self.is_proxies_true else None
         )
         if positions.status_code == 200:
             positions = positions.json()                        
@@ -219,7 +220,6 @@ class BINANCE_API(Total_Logger):
             'recvWindow': 20000,
             'timestamp': int(time.time() * 1000)
         }
-
         params = self.get_signature(params)
         resp = self.HTTP_request('other', self.cancel_order_url, method='DELETE', headers=self.headers, params=params)
         return resp 
