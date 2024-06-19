@@ -1,6 +1,6 @@
 from RISK_MANAGMENT.statistik_raport import STATISTIC
 import aiohttp
-# from aiohttp_socks import ProxyConnector
+from aiohttp_socks import ProxyConnector
 import asyncio
 import json
 import random
@@ -224,10 +224,10 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             # /////////////////////////////////////
             while retries < max_retries:            
                 try:
-                    # if self.is_proxies_true:
-                    #     connector = ProxyConnector.from_url(f'socks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}')
-                    # (connector=connector if self.is_proxies_true else None)
-                    async with aiohttp.ClientSession() as session:
+                    if self.is_proxies_true:
+                        connector = ProxyConnector.from_url(f'socks5://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_socks5_port}')
+                    
+                    async with aiohttp.ClientSession(connector=connector if self.is_proxies_true else None) as session:
                         async with session.ws_connect(url + f"{self.symbol}@kline_1s") as ws:
                             subscribe_request = {
                                 "method": "SUBSCRIBE",

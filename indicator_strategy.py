@@ -1,6 +1,5 @@
 import pandas as pd
 # import pandas_ta as ta
-import ta
 from tradingview_ta import get_multiple_analysis
 from random import choice
 from api_binance import BINANCE_API
@@ -27,26 +26,77 @@ class INDICATORS(BINANCE_API):
             9 -- 'trading_view_ind + trend_line' -- индикатор библиотеки трейдинг вью + трендовая линия
             10 -- 'ema_crossover + vpvr_level' # кроссовер ema плюс + vpvr индикатор
         """
-
+   
     def calculate_ema(self, data, ema1_period, ema2_period, ema3_period):
-        data[f"EMA{ema1_period}"] = ta.trend.ema_indicator(data['Close'], window=ema1_period)
-        data[f"EMA{ema2_period}"] = ta.trend.ema_indicator(data['Close'], window=ema2_period)
-        data[f"EMA{ema3_period}"] = ta.trend.ema_indicator(data['Close'], window=ema3_period) 
+        close = data['Close']
+        ema1 = close.ewm(span=ema1_period, adjust=False).mean()
+        ema2 = close.ewm(span=ema2_period, adjust=False).mean()
+        ema3 = close.ewm(span=ema3_period, adjust=False).mean()
+        data[f"EMA{ema1_period}"] = ema1
+        data[f"EMA{ema2_period}"] = ema2
+        data[f"EMA{ema3_period}"] = ema3
         data.dropna(inplace=True)
-        return data
+        return data    
 
     def calculate_stoch_rsi(self, data):
-        return ta.momentum.stochrsi(data['Close'], window=14, smooth1=3, smooth2=3)
-        # print()
-        # data['StochRSI_%K'] = stoch_rsi['STOCHRSIk_14_3_3']
-        # data['StochRSI_%D'] = stoch_rsi['STOCHRSId_14_3_3']
-        # data.dropna(inplace=True)
-        # return data
+        close = data['Close']
+        window = 14
+        smooth1 = 3
+        smooth2 = 3
 
-    def calculate_atr(self, data, atr_period):
-        data[f"ATR{atr_period}"] = ta.atr(data['High'], data['Low'], data['Close'], length=atr_period)
+        # Рассчитываем RSI
+        delta = close.diff()
+        gain = delta.where(delta > 0, 0)
+        loss = -delta.where(delta < 0, 0)
+
+        avg_gain = gain.rolling(window=window, min_periods=1).mean()
+        avg_loss = loss.rolling(window=window, min_periods=1).mean()
+
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+
+        # Рассчитываем стохастический RSI
+        min_rsi = rsi.rolling(window=window, min_periods=1).min()
+        max_rsi = rsi.rolling(window=window, min_periods=1).max()
+
+        stoch_rsi = (rsi - min_rsi) / (max_rsi - min_rsi)
+        stoch_rsi_k = stoch_rsi.rolling(window=smooth1, min_periods=1).mean()
+        stoch_rsi_d = stoch_rsi_k.rolling(window=smooth2, min_periods=1).mean()
+
+        data['StochRSI_%K'] = stoch_rsi_k * 100  # Приводим к диапазону 0-100
+        data['StochRSI_%D'] = stoch_rsi_d * 100  # Приводим к диапазону 0-100
         data.dropna(inplace=True)
-        return data, data[f"ATR{atr_period}"].iloc[-1]
+
+        return data
+
+    def calculate_atr(self, data, atr_period=14):
+        high = data['High'].values
+        low = data['Low'].values
+        close = data['Close'].values
+
+        tr = [0] * len(data)
+        atr = [0] * len(data)
+
+        tr[0] = high[0] - low[0]
+
+        # Calculate True Range (TR)
+        for i in range(1, len(data)):
+            tr_high_low = high[i] - low[i]
+            tr_high_close_prev = abs(high[i] - close[i - 1])
+            tr_low_close_prev = abs(low[i] - close[i - 1])
+            tr[i] = max(tr_high_low, tr_high_close_prev, tr_low_close_prev)
+
+        # Calculate ATR
+        atr[atr_period - 1] = sum(tr[:atr_period]) / atr_period
+
+        for i in range(atr_period, len(data)):
+            atr[i] = (atr[i - 1] * (atr_period - 1) + tr[i]) / atr_period
+
+        data_copy = data.copy()
+        data_copy[f"ATR{atr_period}"] = atr
+        data_copy.dropna(inplace=True)
+
+        return data_copy, atr[-1]
 
 
     # def calculate_ema(self, data, ema1_period, ema2_period, ema3_period):
@@ -217,14 +267,13 @@ class INDICATORS_STRATEGYY(INDICATORS):
                         if 'ema_crossover' in strategy_list: 
                             ema_crossover_defender_val = ema_crossover_defender(df)                       
                             if ema_crossover_defender_val == "L":
-                                print(f"ema_crossover signals_assum += 1")
+                                # print(f"ema_crossover signals_assum += 1")
                                 signals_assum += 1  
                             elif ema_crossover_defender_val == "S":
-                                print(f"ema_crossover signals_assum -= 1")
+                                # print(f"ema_crossover signals_assum -= 1")
                                 signals_assum -= 1
-                            else:
-                                print(f"ema_crossover signals_assum: None")
-
+                            # else:
+                            #     print(f"ema_crossover signals_assum: None")
 
                         if 'trend_line' in strategy_list:
                             trend_line_defender_val = trend_line_defender(df)
@@ -292,10 +341,3 @@ class INDICATORS_STRATEGYY(INDICATORS):
                 time.sleep(0.05)
 
         return None, None, None, None
-    
-# indnd = INDICATORS()
-
-# data = indnd.get_klines('BTCUSDT', '1m', 240)
-# # new_data = indnd.calculate_ema(data, 5, 20, 240)
-# new_data = indnd.calculate_stoch_rsi(data)
-# print(new_data)

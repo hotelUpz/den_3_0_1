@@ -22,7 +22,7 @@ class MARTIN_GALE(TEMPLATES):
             # print(cur_losses)
     
     def martin_gale_prosess_handler(self, last_win_los, start_depo, depo, cur_martin_gale_counter, max_martin_gale_counter, martin_gale_ratio):
-        if (cur_martin_gale_counter == max_martin_gale_counter) or (last_win_los in [0, 1]):
+        if (cur_martin_gale_counter == max_martin_gale_counter) or (last_win_los == 1):
             depo = start_depo
             if self.play_by_leverage:
                 self.lev_size = self.lev_size_default
