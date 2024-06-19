@@ -225,9 +225,10 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             # /////////////////////////////////////  
             url = 'wss://stream.binance.com:9443/ws/'
             # /////////////////////////////////////
-            max_retries = 3
+            max_retries = 10
+            max_async_cycle_retries = 5
             retry_delay = 1  # seconds
-            retries = 0
+            retries = 0            
             # /////////////////////////////////////
             seconds_counter = 0
             # /////////////////////////
@@ -239,7 +240,9 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             next_trigger_price = enter_price * (1 + (last_signal_val * stop_loss_ratio * trigger_step_counter))
             # print(f"next_trigger_price_220str: {next_trigger_price}")
             # /////////////////////////////////////
-            while retries < max_retries:            
+            while retries < max_retries:
+                if self.stop_bot_flag:
+                    return False         
                 try:
                     # connectorr = None
                     # if self.is_proxies_true:
@@ -254,51 +257,53 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                 "params": [f"{self.symbol.lower()}@kline_1s"],
                                 "id": random.randrange(11,111111)
                             }
-                            print('Stop_logic_price_monitoring start processing!')                     
+                            print('Stop_logic_price_monitoring start processing!')
+                            async_cycle_retries = 0                     
                             try:
                                 await ws.send_json(subscribe_request)
                             except:
                                 pass
 
                             async for msg in ws:
-                                if msg.type == aiohttp.WSMsgType.TEXT:
-                                    try:
+                                if self.stop_bot_flag:
+                                    return False
+                                if async_cycle_retries >= max_async_cycle_retries:
+                                    break
+                                try:
+                                    if msg.type == aiohttp.WSMsgType.TEXT:                                    
                                         data = json.loads(msg.data)
                                         kline_websocket_data = data.get('k', {})
                                         if kline_websocket_data:
                                             cur_price = float(kline_websocket_data.get('c'))
-                                            # print(f"last_close_price websocket: {cur_price}")                           
-                                            try:
-                                                if self.stop_bot_flag:
-                                                    return False
-                                                if (seconds_counter == 10) or (is_check_position):
-                                                    # print("try to check is_close_pos_true")                                               
-                                                    if self.is_closing_position_true(self.symbol):
-                                                        self.sl_order_id = sl_order_id
-                                                        self.close_position_utilites(
-                                                            last_signal_val
-                                                        )                                                            
-                                                        msg = "Бот ищет следующий сигнал"
-                                                        self.handle_messagee(msg)
-                                                        return True
-                                                    if is_problem_to_moved_sl:
-                                                        return False                                                    
-                                                    seconds_counter = 0
-                                 
-                                                stop_loss_step_counter, trigger_step_counter, sl_order_id, next_trigger_price, is_problem_to_moved_sl, is_check_position, last_stop_loss_price = self.trailing_sl_engin(cur_price, qty, enter_price, stop_loss_ratio, stop_loss_step_counter, trigger_step_counter, next_trigger_price, sl_order_id, is_problem_to_moved_sl, price_precession, sl_risk_reward_multiplier, last_signal_val, last_stop_loss_price)
-                                                 
-                                                seconds_counter += 1
-                                            except Exception as ex:
-                                                # print(ex)
-                                                pass
-                                            
-                                    except Exception as ex:
-                                        continue
+                                            # print(f"last_close_price websocket: {cur_price}")                          
 
+                                            if (seconds_counter == 10) or (is_check_position):
+                                                # print("try to check is_close_pos_true")                                               
+                                                if self.is_closing_position_true(self.symbol):
+                                                    self.sl_order_id = sl_order_id
+                                                    self.close_position_utilites(
+                                                        last_signal_val
+                                                    )                                                            
+                                                    msg = "Бот ищет следующий сигнал"
+                                                    self.handle_messagee(msg)
+                                                    return True
+                                                if is_problem_to_moved_sl:
+                                                    return False                                                    
+                                                seconds_counter = 0
+                                
+                                            stop_loss_step_counter, trigger_step_counter, sl_order_id, next_trigger_price, is_problem_to_moved_sl, is_check_position, last_stop_loss_price = self.trailing_sl_engin(cur_price, qty, enter_price, stop_loss_ratio, stop_loss_step_counter, trigger_step_counter, next_trigger_price, sl_order_id, is_problem_to_moved_sl, price_precession, sl_risk_reward_multiplier, last_signal_val, last_stop_loss_price)
+                                                
+                                            seconds_counter += 1
+                                            continue
+
+                                    async_cycle_retries += 1                                            
+                                except Exception as ex:
+                                    async_cycle_retries += 1
+                                        
                 except Exception as ex:
                     print(f"An error occurred: {ex}")
-                    retries += 1
-                    await asyncio.sleep(retry_delay * (2 ** retries))  # Exponential backoff
+                retries += 1
+                await asyncio.sleep(retry_delay + ((2 * retries)/10))
 
             return False
         

@@ -12,6 +12,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
         self.martin_gale_redirect_flag = False
         self.indicators_redirect_flag = False
         self.set_time_ema_periods_flag = False
+        self.set_antystrategy_flag = False
         self.tp_sl_redirect_flag = False
         self.add_in_dlack_list_flag = False
         self.documentation_redirect_flag = False
@@ -208,6 +209,23 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 self.ema_trend_line = int(float(dataa[2]))
                 self.ema_settings()
                 self.bot.send_message(message.chat.id, f"Настройки волн EMA применены успешно!")         
+            # ////////////////////////////////////////////////////////////////////////////
+            # /////////////////////////////////////////////////////////////////////////////// 
+            @self.bot.message_handler(func=lambda message: message.text == 'ANTYSTRATEGY')             
+            def handle_set_antystrategy(message):
+                self.last_message = message               
+                if self.seq_control_flag:
+                    self.set_antystrategy_flag = True
+                    self.bot.send_message(message.chat.id, "Применить антистратегию? (y/n)")
+                else:
+                    self.bot.send_message(message.chat.id, "Нажмите START для верификации")
+
+            @self.bot.message_handler(func=lambda message: self.set_antystrategy_flag)             
+            def handle_set_antystrategy_redirect(message):
+                self.set_antystrategy_flag = False
+                self.is_reverse_signal = -1 if message.text.strip().upper() == 'Y' else 1
+                asnty_strategyy = "да" if self.is_reverse_signal == -1 else "нет"
+                self.bot.send_message(message.chat.id, f"Антистратегия (противоположный сигнал): {asnty_strategyy}\n")         
             # ////////////////////////////////////////////////////////////////////////////
             # ////////////////////////////////////////////////////////////////////////////
             @self.bot.message_handler(func=lambda message: message.text == 'TP/SL')             

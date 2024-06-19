@@ -10,8 +10,8 @@ class SETTINGSS():
         self.secondary_orders_type = 1 # 1/2:  'TAKE_PROFIT_MARKET'/'LIMIT'
         
         # //////////////////////////// НАСТРОЙКИ ИНДИКАТОРА:
-        self.indicators_strategy_number = 10 # номер стратегии индикаторов
-        self.is_reverse_signal = 1 # Вкл/Выкл: -1/1 # использовать обратный сигнал. Если шорт то лонг и наоборот. Чтобы активировать введите значение -1 (минус один)
+        self.indicators_strategy_number = 1 # номер стратегии индикаторов
+        self.is_reverse_signal = -1 # Вкл/Выкл: -1/1 # использовать обратный сигнал. Если шорт то лонг и наоборот. Чтобы активировать введите значение -1 (минус один)
         # 1 -- 'ema_crossover': классическая стратегия прересечения двух ema (кроссовер)
         # 2 -- 'ema_crossover + trend_line': кроссовер ema плюс ориентироваться на линию тренда ema. Период равен ema_trend_line, cмотри ниже
         # 3 -- 'ema_crossover + stoch_rsi_crossover': ema кроссовер плюс кроссовер стохастик_рси
@@ -40,19 +40,19 @@ class SETTINGSS():
             # Короткая EMA: 20, Длинная EMA: 100
             # Короткая EMA: 50, Длинная EMA: 200
 
-        self.ema1_period = 13 # - длина короткой волны
-        self.ema2_period = 48 # - длина длинной волны
+        self.ema1_period = 50 # - длина короткой волны
+        self.ema2_period = 200 # - длина длинной волны
         self.ema_trend_line = 240 # - длинга тренда
         self.stoch_rsi_over_sell, self.stoch_rsi_over_buy = 30, 70 # уровни перепроданности и перекупленности стохастик-рси. Для стратегий индикатора 5 и 6 (self.indicators_strategy_number = 5 или self.indicators_strategy_number = 6)
 
         # //////////////////// ТАЙМ ФРЕЙМ:
-        self.kline_time, self.time_frame = 15, 'm' # таймфрейм где челое число - период, а буква - сам тайм фрейм (минута, час и т.д (m, h))
+        self.kline_time, self.time_frame = 1, 'm' # таймфрейм где челое число - период, а буква - сам тайм фрейм (минута, час и т.д (m, h))
 
         # //////////////////////////// НАСТРОЙКИ СТОП ЛОСС И ТЕЙК ПРОФИТА:
         self.stop_loss_global_type = 1
         # 1 -- 'TRAILLING_CUSTOM' # треллинг стоп лосс кастомный (не бинансовский)
         # 2 -- 'FIXED' # фиксированные стоп лосс и тейк профит
-        self.risk_reward_ratio = '1:2'  # соотношение риска к прибыли.
+        self.risk_reward_ratio = '1:3'  # соотношение риска к прибыли.
         # //////// способы вычисления точки стоп лосса: /////////////////
 
         self.stop_loss_ratio_mode = 1 # Метод для расчета коэффициента стоп-лосса. 
@@ -66,7 +66,7 @@ class SETTINGSS():
         # '8': 'vpvr_level', -- по уровням обьема (ликвидности)
         
         self.stop_loss_ratio = None # в % Множитель стоп лосса. Для self.stop_loss_ratio_mode 2 - 8  -- расчитывается динамически -- этот параметр НЕ ТРОГАТЬ!! Он приведен для информации!
-        self.static_stop_loss_ratio_val = 0.5 # в % Множитель стоп лосса. Только для статического стоп лосс коэффициента -- self.stop_loss_ratio_mode = 1
+        self.static_stop_loss_ratio_val = 0.3 # в % Множитель стоп лосса. Только для статического стоп лосс коэффициента -- self.stop_loss_ratio_mode = 1
         self.min_default_ratio = 0.5 # в %. self.stop_loss_ratio сбрасывается к этому значению если расчетное значение self.stop_loss_ratio НИЖЕ этого порога
         self.max_default_ratio = 1.5 # в % self.stop_loss_ratio сбрасывается к этому значению если расчетное значение self.stop_loss_ratio ВЫШЕ этого порога
 

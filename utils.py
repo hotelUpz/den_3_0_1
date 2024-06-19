@@ -1,4 +1,4 @@
-import requests
+# import requests
 import time
 from datetime import datetime as dttm, time as timm, timedelta as tmdl
 import pytz
@@ -27,7 +27,8 @@ class COInN_FILTERR(INDICATORS_STRATEGYY):
             'convert': 'USD',  
         }
         # print(self.proxiess)
-        response = requests.get(url, headers=headers, params=params, proxies=self.proxiess if self.is_proxies_true else None)
+        # response = requests.get(url, headers=headers, params=params, proxies=self.proxiess if self.is_proxies_true else None)
+        response = self.session.get(url, headers=headers, params=params)
         # print(f"coin_market_cup: {response}")
         # print(response.json())
         if response.status_code == 200:

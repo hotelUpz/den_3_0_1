@@ -15,8 +15,9 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
         try:
             if self.is_trailing_stop_start:  
                 if not self.trailing_tp_sl_shell(self.executed_qty, self.enter_price, self.stop_loss_ratio, self.price_precession, self.last_signal_val, self.sl_risk_reward_multiplier, self.sl_order_id):
-                    msg = "Не удалось переместить стоп..."
-                    self.handle_messagee(msg)
+                    if not self.stop_bot_flag:
+                        msg = "В процессе вебсокет-мониторинга цены возникли какие-то проблемы..."
+                        self.handle_messagee(msg)
                     return False
                 self.in_position = False
                 self.is_trailing_stop_start = False

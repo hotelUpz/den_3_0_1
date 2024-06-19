@@ -60,10 +60,11 @@ class BINANCE_API(Total_Logger):
 
     def create_session(self):
         session = requests.Session()
-        session.proxies = {
-            'http': self.proxy_url,
-            'https': self.proxy_url
-        }
+        if self.is_proxies_true:
+            session.proxies = {
+                'http': self.proxy_url,
+                'https': self.proxy_url
+            }
         session.headers.update(self.headers)
         return session
 
@@ -80,8 +81,8 @@ class BINANCE_API(Total_Logger):
 
         for i in range(2):
             try:
-                if not self.is_proxies_true:
-                    kwargs.pop('proxies', None)
+                # if not self.is_proxies_true:
+                #     kwargs.pop('proxies', None)
 
                 # response = requests.request(url=url, **kwargs)
                 response = self.session.request(url=url, **kwargs)
@@ -92,12 +93,13 @@ class BINANCE_API(Total_Logger):
                         if response.status_code != 200:
                             self.handle_exception(f"Ошибка запроса при попытке создания ордера. Файл api_binance.py: {response.status_code}\nТекст ошибки:\n{response.json()}")                      
                             sleep((i+1) * multiplier)
+                            self.session = self.create_session()
                             continue
-                    return response.json()
-                continue
+                    return response.json()        
             except Exception as ex:
                 self.handle_exception(f"Файл api_binance.py: {ex}") 
                 sleep((i+1) * multiplier)
+            self.session = self.create_session()
 
         return None    
 
@@ -156,8 +158,13 @@ class BINANCE_API(Total_Logger):
             'recvWindow': 20000
         }
         params = self.get_signature(params)
-        # positions = self.HTTP_request('other', self.positions_url, method='GET', headers=self.headers, params=params)
-        positions = requests.get(
+        # positions = requests.get(
+        #     self.positions_url, 
+        #     headers=self.headers, 
+        #     params=params, 
+        #     proxies=self.proxiess if self.is_proxies_true else None
+        # )
+        positions = self.session.get(
             self.positions_url, 
             headers=self.headers, 
             params=params, 
