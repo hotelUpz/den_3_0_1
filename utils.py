@@ -26,7 +26,8 @@ class COInN_FILTERR(INDICATORS_STRATEGYY):
             'limit': limit,
             'convert': 'USD',  
         }
-        response = requests.get(url, headers=headers, params=params)
+        # print(self.proxiess)
+        response = requests.get(url, headers=headers, params=params, proxies=self.proxiess if self.is_proxies_true else None)
         if response.status_code == 200:
             data = response.json()
             top_coins = data['data']

@@ -149,7 +149,7 @@ class BINANCE_API(Total_Logger):
             params=params, 
             proxies=self.proxiess if self.is_proxies_true else None
         )
-        if positions.status_code == 200:    
+        if positions.status_code == 200:
             positions = positions.json()                        
             for position in positions:
                 if position['symbol'] == symbol and float(position['positionAmt']) != 0:
