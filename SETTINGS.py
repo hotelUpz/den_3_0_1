@@ -10,7 +10,7 @@ class SETTINGSS():
         self.secondary_orders_type = 1 # 1/2:  'TAKE_PROFIT_MARKET'/'LIMIT'
         
         # //////////////////////////// НАСТРОЙКИ ИНДИКАТОРА:
-        self.indicators_strategy_number = 1 # номер стратегии индикаторов
+        self.indicators_strategy_number = 8 # номер стратегии индикаторов
         self.is_reverse_signal = -1 # Вкл/Выкл: -1/1 # использовать обратный сигнал. Если шорт то лонг и наоборот. Чтобы активировать введите значение -1 (минус один)
         # 1 -- 'ema_crossover': классическая стратегия прересечения двух ema (кроссовер)
         # 2 -- 'ema_crossover + trend_line': кроссовер ema плюс ориентироваться на линию тренда ema. Период равен ema_trend_line, cмотри ниже
@@ -46,7 +46,7 @@ class SETTINGSS():
         self.stoch_rsi_over_sell, self.stoch_rsi_over_buy = 30, 70 # уровни перепроданности и перекупленности стохастик-рси. Для стратегий индикатора 5 и 6 (self.indicators_strategy_number = 5 или self.indicators_strategy_number = 6)
 
         # //////////////////// ТАЙМ ФРЕЙМ:
-        self.kline_time, self.time_frame = 5, 'm' # таймфрейм где челое число - период, а буква - сам тайм фрейм (минута, час и т.д (m, h))
+        self.kline_time, self.time_frame = 1, 'm' # таймфрейм где челое число - период, а буква - сам тайм фрейм (минута, час и т.д (m, h))
 
         # //////////////////////////// НАСТРОЙКИ СТОП ЛОСС И ТЕЙК ПРОФИТА:
         self.stop_loss_global_type = 1

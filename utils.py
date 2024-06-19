@@ -28,7 +28,7 @@ class COInN_FILTERR(INDICATORS_STRATEGYY):
         }
         # print(self.proxiess)
         response = requests.get(url, headers=headers, params=params, proxies=self.proxiess if self.is_proxies_true else None)
-        print(f"coin_market_cup: {response}")
+        # print(f"coin_market_cup: {response}")
         # print(response.json())
         if response.status_code == 200:
             data = response.json()

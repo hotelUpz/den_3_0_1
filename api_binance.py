@@ -74,7 +74,7 @@ class BINANCE_API(Total_Logger):
                     kwargs.pop('proxies', None)
 
                 response = requests.request(url=url, **kwargs)
-                print(f"binance: {response}")
+                # print(f"binance: {response}")
                 # print(response.json())
                 if response is not None:
                     if target == 'place_order':
