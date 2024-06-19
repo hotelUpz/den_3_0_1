@@ -241,8 +241,8 @@ class MAIN_CONTROLLER(ENGINS):
                 self.handle_messagee(msg)
                 self.candidate_symbols_list = self.get_top_coins_template()
                 self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
-                mess_resp = 'Список монет кандидатов:\n' + '\n'.join(self.candidate_symbols_list)
-                self.handle_messagee(mess_resp)
+                # mess_resp = 'Список монет кандидатов:\n' + '\n'.join(self.candidate_symbols_list)
+                # self.handle_messagee(mess_resp)
             else:
                 wait_time = self.time_calibrator(1, 'm') if not self.in_position else 10
             if self.is_trailing_stop_start == True:

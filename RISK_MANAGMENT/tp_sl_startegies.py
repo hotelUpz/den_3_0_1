@@ -267,7 +267,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                         kline_websocket_data = data.get('k', {})
                                         if kline_websocket_data:
                                             cur_price = float(kline_websocket_data.get('c'))
-                                            print(f"last_close_price websocket: {cur_price}")                             
+                                            # print(f"last_close_price websocket: {cur_price}")                           
                                             try:
                                                 if (seconds_counter == 10) or (is_check_position):
                                                     # print("try to check is_close+pos_true")                                               
