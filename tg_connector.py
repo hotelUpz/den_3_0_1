@@ -21,11 +21,12 @@ class TG_CONNECTOR(PARAMS):
         button5 = types.KeyboardButton("SET TIME_FRAME")
         button6 = types.KeyboardButton("SET DEPO/LEVERAGE")
         button7 = types.KeyboardButton("INDICATORS")
-        button8 = types.KeyboardButton("TP/SL")
-        button9 = types.KeyboardButton("MARTIN GALE")
-        button10 = types.KeyboardButton("ADD TO BLACK LIST")
-        button11 = types.KeyboardButton("DOCUMENTATION")    
-        menu_markup.add(button1, button2, button3, button5, button6, button7, button8, button9, button10, button11)        
+        button8 = types.KeyboardButton("SET EMA PERIOD")
+        button9 = types.KeyboardButton("TP/SL")
+        button10 = types.KeyboardButton("MARTIN GALE")
+        button11 = types.KeyboardButton("ADD TO BLACK LIST")
+        button12 = types.KeyboardButton("DOCUMENTATION")    
+        menu_markup.add(button1, button2, button3, button5, button6, button7, button8, button9, button10, button11, button12)        
         return menu_markup
 
     def connector_func(self, message, response_message):

@@ -269,8 +269,10 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                             cur_price = float(kline_websocket_data.get('c'))
                                             # print(f"last_close_price websocket: {cur_price}")                           
                                             try:
+                                                if self.stop_bot_flag:
+                                                    return False
                                                 if (seconds_counter == 10) or (is_check_position):
-                                                    # print("try to check is_close+pos_true")                                               
+                                                    # print("try to check is_close_pos_true")                                               
                                                     if self.is_closing_position_true(self.symbol):
                                                         self.sl_order_id = sl_order_id
                                                         self.close_position_utilites(

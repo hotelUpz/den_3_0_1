@@ -11,6 +11,7 @@ class TG_MANAGER(MAIN_CONTROLLER):
         self.set_time_frame_flag = False
         self.martin_gale_redirect_flag = False
         self.indicators_redirect_flag = False
+        self.set_time_ema_periods_flag = False
         self.tp_sl_redirect_flag = False
         self.add_in_dlack_list_flag = False
         self.documentation_redirect_flag = False
@@ -188,6 +189,26 @@ class TG_MANAGER(MAIN_CONTROLLER):
                 self.ema_settings()
                 self.bot.send_message(message.chat.id, f"Текущий номер стратегии индикатора: {self.indicators_strategy_number}")
 
+            # /////////////////////////////////////////////////////////////////////////////// 
+            @self.bot.message_handler(func=lambda message: message.text == 'SET EMA PERIOD')             
+            def handle_set_ema_periods(message):
+                self.last_message = message               
+                if self.seq_control_flag:
+                    self.set_time_ema_periods_flag = True
+                    self.bot.send_message(message.chat.id, "Введите длины волн через пробел. Например: 5, 20, 200. Где 200 - длина тренда")
+                else:
+                    self.bot.send_message(message.chat.id, "Нажмите START для верификации")
+
+            @self.bot.message_handler(func=lambda message: self.set_time_ema_periods_flag)             
+            def handle_set_ema_periods_redirect(message):
+                self.set_time_ema_periods_flag = False
+                dataa = [x for x in message.text.split(' ') if x and x.strip()]
+                self.ema1_period = int(float(dataa[0]))
+                self.ema2_period = int(float(dataa[1]))
+                self.ema_trend_line = int(float(dataa[2]))
+                self.ema_settings()
+                self.bot.send_message(message.chat.id, f"Настройки волн EMA применены успешно!")         
+            # ////////////////////////////////////////////////////////////////////////////
             # ////////////////////////////////////////////////////////////////////////////
             @self.bot.message_handler(func=lambda message: message.text == 'TP/SL')             
             def handle_tp_sl(message):
