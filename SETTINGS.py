@@ -10,7 +10,7 @@ class SETTINGSS():
         self.secondary_orders_type = 2 # 1/2:  'TAKE_PROFIT_MARKET'/'LIMIT'
         
         # //////////////////////////// НАСТРОЙКИ ИНДИКАТОРА:
-        self.indicators_strategy_number = 2 # номер стратегии индикаторов
+        self.indicators_strategy_number = 10 # номер стратегии индикаторов
         self.is_reverse_signal = 1 # Вкл/Выкл: -1/1 # использовать обратный сигнал. Если шорт то лонг и наоборот. Чтобы активировать введите значение -1 (минус один)
         # 1 -- 'ema_crossover': классическая стратегия прересечения двух ema (кроссовер)
         # 2 -- 'ema_crossover + trend_line': кроссовер ema плюс ориентироваться на линию тренда ema. Период равен ema_trend_line, cмотри ниже
