@@ -29,16 +29,16 @@ class STATISTIC(MARTIN_GALE):
             if the_orders[0].get('side', None) == the_orders[1].get('side', None):
                 return 0, 0, 0, depo
             if the_orders[0].get('side', None) == 'BUY':
-                if init_order_price - oposit_order_price > 0.009:
+                if init_order_price - oposit_order_price > 0:
                     return -1, init_order_price, oposit_order_price, depo
-                elif init_order_price - oposit_order_price < -0.009:
+                elif init_order_price - oposit_order_price < 0:
                     return 1, init_order_price, oposit_order_price, depo
                 else:
                     return 0, init_order_price, oposit_order_price, depo
             elif the_orders[0].get('side', None) == 'SELL':
-                if init_order_price - oposit_order_price > 0.009:
+                if init_order_price - oposit_order_price > 0:
                     return 1, init_order_price, oposit_order_price, depo
-                elif init_order_price - oposit_order_price < -0.009:
+                elif init_order_price - oposit_order_price < 0:
                     return -1, init_order_price, oposit_order_price, depo
                 else:
                     return 0, init_order_price, oposit_order_price, depo

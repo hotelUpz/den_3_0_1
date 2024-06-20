@@ -250,7 +250,8 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                     
                     # async with aiohttp.ClientSession(connector=connectorr) as session:
                     #     async with session.ws_connect(url + f"{self.symbol}@kline_1s") as ws:
-                    async with aiohttp.ClientSession() as session:
+                    timeout = aiohttp.ClientTimeout(total=20)
+                    async with aiohttp.ClientSession(timeout=timeout) as session:
                         async with session.ws_connect(url + f"{self.symbol}@kline_1s", proxy=self.proxy_url) as ws:
                             subscribe_request = {
                                 "method": "SUBSCRIBE",
@@ -268,6 +269,10 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                 if self.stop_bot_flag:
                                     return False
                                 if async_cycle_retries >= max_async_cycle_retries:
+                                    try:
+                                        await ws.close()
+                                    except:
+                                        pass                                
                                     break
                                 try:
                                     if msg.type == aiohttp.WSMsgType.TEXT:                                    
@@ -303,6 +308,10 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                 except Exception as ex:
                     print(f"An error occurred: {ex}")
                 retries += 1
+                try:
+                    await ws.close()
+                except:
+                    pass   
                 await asyncio.sleep(retry_delay + ((2 * retries)/10))
 
             return False

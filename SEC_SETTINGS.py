@@ -11,7 +11,7 @@ class SEC_SETTINGSS(SETTINGSS):
         self.local_tz = pytz.timezone('Europe/Kiev') # 'Europe/Berlin' -- часовой пояс
 
         # //////////////////////////// НАСТРОЙКИ ФИЛЬТРА МОНЕТ:
-        self.default_black_coins_list = self.black_coins_list = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'UNIUSDT'] # монеты исключения
+        self.default_black_coins_list = self.black_coins_list = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'UNIUSDT', 'FETUSDT'] # монеты исключения
         self.price_filter_flag = 0 # фильтр по цене. Сейчас отключен. Включить/выкл: - 1/0
         self.MIN_FILTER_PRICE = 0 # минимальный порог цены. Можете указать свое значение.
         self.MAX_FILTER_PRICE = math.inf # максимальный порог цены. Можете указать свое значение.
