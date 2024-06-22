@@ -24,6 +24,8 @@ class MARTIN_GALE(TEMPLATES):
     def martin_gale_prosess_handler(self, last_win_los, start_depo, depo, cur_martin_gale_counter, max_martin_gale_counter, martin_gale_ratio):
         if (cur_martin_gale_counter == max_martin_gale_counter) or (last_win_los == 1):
             depo = start_depo
+            if self.classikal_martin_gale:
+                self.retry_trade = False
             if self.play_by_leverage:
                 self.lev_size = self.lev_size_default
             if cur_martin_gale_counter != 0:
@@ -31,6 +33,8 @@ class MARTIN_GALE(TEMPLATES):
             cur_martin_gale_counter = 0
             return depo, cur_martin_gale_counter
         if last_win_los == -1:
+            if self.classikal_martin_gale:
+                self.retry_trade = True
             if self.play_by_leverage:
                 self.lev_size = int(self.lev_size* martin_gale_ratio)
             depo = round(depo* martin_gale_ratio, 2)

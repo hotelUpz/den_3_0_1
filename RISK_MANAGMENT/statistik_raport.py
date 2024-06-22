@@ -27,21 +27,21 @@ class STATISTIC(MARTIN_GALE):
             init_order_price = float(the_orders[0].get('avgPrice', None))
             oposit_order_price = float(the_orders[1].get('avgPrice', None))
             if the_orders[0].get('side', None) == the_orders[1].get('side', None):
-                return 0, 0, 0, depo
-            if the_orders[0].get('side', None) == 'BUY':
+                return 0, init_order_price, oposit_order_price, depo
+            # if - 0.009 <= init_order_price - oposit_order_price <= 0.009:
+            #     return 0, init_order_price, oposit_order_price, depo
+            if - 0.01 <= (abs(init_order_price - oposit_order_price)/ init_order_price)* depo <= 0.01:
+                return 0, init_order_price, oposit_order_price, depo
+            if the_orders[0].get('side', None) == 'BUY':                
                 if init_order_price - oposit_order_price > 0:
                     return -1, init_order_price, oposit_order_price, depo
                 elif init_order_price - oposit_order_price < 0:
                     return 1, init_order_price, oposit_order_price, depo
-                else:
-                    return 0, init_order_price, oposit_order_price, depo
             elif the_orders[0].get('side', None) == 'SELL':
                 if init_order_price - oposit_order_price > 0:
                     return 1, init_order_price, oposit_order_price, depo
                 elif init_order_price - oposit_order_price < 0:
                     return -1, init_order_price, oposit_order_price, depo
-                else:
-                    return 0, init_order_price, oposit_order_price, depo
         except Exception as ex:
             self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
         return 0, init_order_price, oposit_order_price, depo

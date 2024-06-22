@@ -18,26 +18,43 @@ class INDICATORS(BINANCE_API):
     def indicators_documentation(self):
         """
             # номера стратегии индикаторов:
-            1 -- 'ema_crossover': классическая стратегия прересечения двух ema (кроссовер)
-            2 -- 'ema_crossover + trend_line': кроссовер ema плюс ориентироваться на линию тренда ema. Период равен ema_trend_line (сейчас 240). (Смотри в настройках программы)
-            3 -- 'ema_crossover + stoch_rsi_crossover': ema кроссовер плюс кроссовер стохастик-рси
-            4 -- 'ema_crossover + stoch_rsi_crossover + trend_line': ema кроссовер плюс кроссовер стохастик-рси плюс линия тренда
-            5 -- 'ema_crossover + stoch_rsi_overTrade': ema кроссовер плюс овертрейд стохастик-рси
-            6 -- 'ema_crossover + stoch_rsi_overTrade + trend_line': то же что и предыдущий, но плюс ориентрироваться на линию тренда
-            7 - 'smart_random + trend_line' # рандомный выбор сигнала c ориентацией на тренд. Рекомендуется использовать только для тестов
-            8 -- 'trading_view_ind' -- индикатор библиотеки трейдинг вью
-            9 -- 'trading_view_ind + trend_line' -- индикатор библиотеки трейдинг вью + трендовая линия
-            10 -- 'ema_crossover + vpvr_level' # кроссовер ema плюс + vpvr индикатор
+            #////////// СТРАТЕГИИ EMA:
+                            # (классические)
+            # 1 -- 'ema_crossover': классическая стратегия прересечения двух ema (кроссовер)
+            # 2 -- 'ema_crossover + trend_line': кроссовер ema плюс ориентироваться на линию тренда ema. Период равен ema_trend_line
+            # 3 -- 'ema_crossover + anty_trend_line': кроссовер ema плюс ориентироваться на анти трендовую линию
+            # 4 -- 'ema_crossover + stoch_rsi_crossover': ema кроссовер плюс кроссовер стохастик_рси
+            # 5 -- 'ema_crossover + stoch_rsi_crossover + trend_line': ema кроссовер плюс кроссовер стохастик_рси плюс линия тренда
+            # 6 -- 'ema_crossover + stoch_rsi_overTrade':  ema кроссовер плюс кроссовер стохастик_рси
+            # 7 -- 'ema_crossover + stoch_rsi_overTrade + trend_line': то же что и предыдущий, плюс ориентрироваться на линию тренда
+
+                            # (эксперементальные)
+            # 8 -- 'ema_crossover + simple_random': : кроссовер ema как тригер но выбор сигнала рандомный. Вероятность выбора 1:1
+            # 9 -- 'ema_crossover + trande_shift_random': кроссовер ema как тригер но выбор сигнала рандомный со смещением вероятности в сторону тренда. Вероятность выбора 1:1.6
+            # 10 -- 'ema_crossover + long_shift_random': кроссовер ema как тригер но выбор сигнала рандомный со смещением вероятности в лонговую сторону. Вероятность выбора 1:1.6. Можно попробовать с настройкой фильтра self.daily_filter_direction = 1, то есть на бычьем рынке
+            # 11 -- 'ema_crossover + short_shift_random': кроссовер ema как тригер но выбор сигнала рандомный со смещением вероятности в шортовую сторону. Вероятность выбора 1:1.6. Можно попробовать с настройкой фильтра self.daily_filter_direction = -1, то есть на медвежьем рынке
+
+                            # (инновационные)
+            # 12 - 'ema_crossover + vpvr_level' # кроссовер ema плюс + vpvr индикатор
+
+            # //////// СТРАТЕГИИ ТРЕЙДИНГ-ВЬЮ индикатора:
+            # 13 - 'trading_view_ind' # индикатор трейдинг вью
+            # 14 - 'trading_view_ind + trend_line' # индикатор трейдинг вью + ориентироваться на линию тренда
+            # 15 - 'trading_view_ind + anti_trend_line' # индикатор трейдинг вью + ориентироваться на анти трендовую линию
+            # 16 -- 'trading_view_ind + simple_random': : индикатор трейдинг вью как тригер но выбор сигнала рандомный. Вероятность выбора 1:1
+            # 17 -- 'trading_view_ind + trande_shift_random': индикатор трейдинг вью как тригер но выбор сигнала рандомный со смещением вероятности в сторону тренда. Вероятность выбора 1:1.6
+            # 18 -- 'trading_view_ind + long_shift_random': индикатор трейдинг вью как тригер но выбор сигнала рандомный со смещением вероятности в лонговую сторону. Вероятность выбора 1:1.6. Можно попробовать с настройкой фильтра self.daily_filter_direction = 1, то есть на бычьем рынке
+            # 19 -- 'trading_view_ind + short_shift_random': индикатор трейдинг вью как тригер но выбор сигнала рандомный со смещением вероятности в шортовую сторону. Вероятность выбора 1:1.6. Можно попробовать с настройкой фильтра self.daily_filter_direction = -1, то есть на медвежьем рынке   
         """
    
-    def calculate_ema(self, data, ema1_period, ema2_period, ema3_period):
+    def calculate_ema(self, data):
         close = data['Close']
-        ema1 = close.ewm(span=ema1_period, adjust=False).mean()
-        ema2 = close.ewm(span=ema2_period, adjust=False).mean()
-        ema3 = close.ewm(span=ema3_period, adjust=False).mean()
-        data[f"EMA{ema1_period}"] = ema1
-        data[f"EMA{ema2_period}"] = ema2
-        data[f"EMA{ema3_period}"] = ema3
+        ema1 = close.ewm(span=self.ema1_period, adjust=False).mean()
+        ema2 = close.ewm(span=self.ema2_period, adjust=False).mean()
+        ema3 = close.ewm(span=self.ema_trend_line, adjust=False).mean()
+        data[f"EMA{self.ema1_period}"] = ema1
+        data[f"EMA{self.ema2_period}"] = ema2
+        data[f"EMA{self.ema_trend_line}"] = ema3
         data.dropna(inplace=True)
         return data    
 
@@ -72,7 +89,7 @@ class INDICATORS(BINANCE_API):
 
         return data
 
-    def calculate_atr(self, data, atr_period=14):
+    def calculate_atr(self, data, atr_period):
         high = data['High'].values
         low = data['Low'].values
         close = data['Close'].values
@@ -101,10 +118,10 @@ class INDICATORS(BINANCE_API):
 
         return data_copy, atr[-1]
 
-    # def calculate_ema(self, data, ema1_period, ema2_period, ema3_period):
-    #     data[f"EMA{ema1_period}"] = ta.ema(data['Close'], length=ema1_period)
-    #     data[f"EMA{ema2_period}"] = ta.ema(data['Close'], length=ema2_period)
-    #     data[f"EMA{ema3_period}"] = ta.ema(data['Close'], length=ema3_period) 
+    # def calculate_ema(self, data):
+    #     data[f"EMA{self.ema1_period}"] = ta.ema(data['Close'], length=self.ema1_period)
+    #     data[f"EMA{self.ema2_period}"] = ta.ema(data['Close'], length=self.ema2_period)
+    #     data[f"EMA{self.ema_trend_line}"] = ta.ema(data['Close'], length=self.ema_trend_line) 
     #     data.dropna(inplace=True)
     #     return data
     
@@ -159,6 +176,41 @@ class INDICATORS(BINANCE_API):
                 return "L", strongest_volum_level[1]
 
         return
+    # ////////////////////
+    def trend_line_defender(self, df):
+        ema2= df[f"EMA{self.ema2_period}"].iloc[-1]
+        ema3 = df[f"EMA{self.ema_trend_line}"].iloc[-1]
+        if ema2 > ema3:
+            return "L"
+        if ema2 < ema3:
+            return "S"
+        return
+
+    def ema_crossover_defender(self, df):
+        ema1 = df[f"EMA{self.ema1_period}"]
+        ema2 = df[f"EMA{self.ema2_period}"]
+        if (ema1.iloc[-1] > ema2.iloc[-1] and ema1.iloc[-2] < ema2.iloc[-2]):
+            return "L"
+        if (ema1.iloc[-1] < ema2.iloc[-1] and ema1.iloc[-2] > ema2.iloc[-2]):
+            return "S"
+        return
+    
+    def stoch_rsi_srossover_defender(self, df):
+        for i in range(1, 4):
+            if (df['StochRSI_%K'].iloc[-1] > df['StochRSI_%D'].iloc[-1] and 
+                df['StochRSI_%K'].iloc[-(i+1)] < df['StochRSI_%D'].iloc[-(i+1)]):                   
+                return "L"
+            if (df['StochRSI_%K'].iloc[-1] < df['StochRSI_%D'].iloc[-1] and 
+                df['StochRSI_%K'].iloc[-(i+1)] > df['StochRSI_%D'].iloc[-(i+1)]):
+                return "S"
+        return
+    
+    def stoch_rsi_overTrade_defender(self, df):
+        if df['StochRSI_%K'].iloc[-1] < self.stoch_rsi_over_sell and df['StochRSI_%D'].iloc[-1] < self.stoch_rsi_over_sell:
+            return "L"
+        if df['StochRSI_%K'].iloc[-1] > self.stoch_rsi_over_buy and (df['StochRSI_%D'].iloc[-1] > self.stoch_rsi_over_buy):
+            return "S"
+        return
     
     # /////// trading view indicator:
     def get_tv_signals(self, coins_list):
@@ -193,42 +245,8 @@ class INDICATORS_STRATEGYY(INDICATORS):
         # устанавливаем функциии декораторы
         self.get_signals = self.log_exceptions_decorator(self.get_signals)
     
-    def get_signals(self, strategy_list, coins_list, ema1_period, ema2_period, ema3_period, stoch_rsi_over_sell, stoch_rsi_over_buy):
-        # print(ema1_period, ema2_period, ema3_period)
-        def trend_line_defender(df):
-            ema2= df[f"EMA{ema2_period}"].iloc[-1]
-            ema3 = df[f"EMA{ema3_period}"].iloc[-1]
-            if ema2 > ema3:
-                return "L"
-            if ema2 < ema3:
-                return "S"
-            return
-
-        def ema_crossover_defender(df):
-            ema1 = df[f"EMA{ema1_period}"]
-            ema2 = df[f"EMA{ema2_period}"]
-            if (ema1.iloc[-1] > ema2.iloc[-1] and ema1.iloc[-2] < ema2.iloc[-2]):
-                return "L"
-            if (ema1.iloc[-1] < ema2.iloc[-1] and ema1.iloc[-2] > ema2.iloc[-2]):
-                return "S"
-            return
-        
-        def stoch_rsi_srossover_defender(df):
-            for i in range(1, 4):
-                if (df['StochRSI_%K'].iloc[-1] > df['StochRSI_%D'].iloc[-1] and 
-                    df['StochRSI_%K'].iloc[-(i+1)] < df['StochRSI_%D'].iloc[-(i+1)]):                   
-                    return "L"
-                if (df['StochRSI_%K'].iloc[-1] < df['StochRSI_%D'].iloc[-1] and 
-                    df['StochRSI_%K'].iloc[-(i+1)] > df['StochRSI_%D'].iloc[-(i+1)]):
-                    return "S"
-            return
-        
-        def stoch_rsi_overTrade_defender(df):
-            if df['StochRSI_%K'].iloc[-1] < stoch_rsi_over_sell and df['StochRSI_%D'].iloc[-1] < stoch_rsi_over_sell:
-                return "L"
-            if df['StochRSI_%K'].iloc[-1] > stoch_rsi_over_buy and (df['StochRSI_%D'].iloc[-1] > stoch_rsi_over_buy):
-                return "S"
-            return
+    def get_signals(self, strategy_list, coins_list):
+        # print(ema1_period, self.ema2_period, ema3_period)
 
         if 'trading_view_ind' in strategy_list:                        
             get_tv_signals_list = self.get_tv_signals(coins_list)
@@ -236,14 +254,14 @@ class INDICATORS_STRATEGYY(INDICATORS):
                 for symbol, cur_signal in get_tv_signals_list:
                     df = None
                     try:
-                        df = self.get_klines(symbol, self.interval, ema3_period)
+                        df = self.get_klines(symbol, self.interval, self.ema_trend_line)
                         if isinstance(df, pd.DataFrame) and not df.empty:
                             cur_price = df['Close'].iloc[-1]
                             if 'trend_line' not in strategy_list:
                                 return symbol, cur_signal, cur_price, df
                                             
-                            df = self.calculate_ema(df, ema1_period, ema2_period, ema3_period)
-                            trend_line_defender_val = trend_line_defender(df)
+                            df = self.calculate_ema(df, self.ema1_period, self.ema2_period, self.ema_trend_line)
+                            trend_line_defender_val = self.trend_line_defender(df)
                             if cur_signal == 1 and trend_line_defender_val == "L":                                       
                                 return symbol, 1, cur_price, df 
                             if cur_signal == -1 and trend_line_defender_val == "S":                         
@@ -261,9 +279,9 @@ class INDICATORS_STRATEGYY(INDICATORS):
                 short_trend = False
                 df = None
                 try:                        
-                    df = self.get_klines(symbol, self.interval, ema3_period)
+                    df = self.get_klines(symbol, self.interval, self.ema_trend_line)
                     if isinstance(df, pd.DataFrame) and not df.empty:
-                        df = self.calculate_ema(df, ema1_period, ema2_period, ema3_period)
+                        df = self.calculate_ema(df, ema1_period, self.ema2_period, self.ema_trend_line
                         cur_price = df["Close"].iloc[-1]
                         # print(f"cur_price: {cur_price}")           
                         
@@ -278,16 +296,22 @@ class INDICATORS_STRATEGYY(INDICATORS):
                             # else:
                             #     print(f"ema_crossover signals_assum: None")
 
-                        if 'trend_line' in strategy_list:
+                        if {'trend_line', 'anti_trend_line'} & set(strategy_list):
                             trend_line_defender_val = trend_line_defender(df)
                             if trend_line_defender_val == "L":
                                 # print(f"trend_line signals_assum += 1")
                                 long_trend = True
-                                signals_assum += 1
+                                if 'trend_line' in strategy_list:
+                                    signals_assum += 1
+                                if 'anti_trend_line' in strategy_list:
+                                    signals_assum -= 1
                             elif trend_line_defender_val == "S":
                                 # print(f"trend_line signals_assum -= 1")
                                 short_trend = True
-                                signals_assum -= 1                       
+                                if 'trend_line' in strategy_list:
+                                    signals_assum -= 1
+                                if 'anti_trend_line' in strategy_list:
+                                    signals_assum += 1                    
                             
                         if 'stoch_rsi_crossover' in strategy_list:
                             df = self.calculate_stoch_rsi(df)
@@ -306,12 +330,24 @@ class INDICATORS_STRATEGYY(INDICATORS):
                             elif stoch_rsi_overTrade_defender_val == "S":
                                 signals_assum -= 1
 
-                        if 'smart_random' in strategy_list:
-                            if long_trend:
-                                random_list = [1,2,3,4,5,6,1,3,5,7,8,9,10]
-                            elif short_trend:
-                                random_list = [1,2,3,4,5,2,4,6,6,7,8,9,10]
-                            if long_trend or short_trend:                         
+                        if {'trande_shift_random', 'long_shift_random', 'short_shift_random'} & set(strategy_list):
+                            if 'trande_shift_random' in strategy_list:
+                                if long_trend:
+                                    random_list = [1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2]
+
+                                elif short_trend:
+                                    random_list = [2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1]
+
+                                if long_trend or short_trend:                         
+                                    if choice(random_list) % 2 != 0:
+                                        return symbol, 1, cur_price, df
+                                    else:
+                                        return symbol, -1, cur_price, df
+                            else:
+                                if 'long_shift_random' in strategy_list:
+                                    random_list = [1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2]
+                                if 'short_shift_random' in strategy_list:
+                                    random_list = [2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1]
                                 if choice(random_list) % 2 != 0:
                                     return symbol, 1, cur_price, df
                                 else:
@@ -345,3 +381,15 @@ class INDICATORS_STRATEGYY(INDICATORS):
                 time.sleep(0.05)
 
         return None, None, None, None
+    
+    def closing_by_crossover_signal(self, cur_direction):
+        ema_crossover_defender_val = ema_crossover_defender(df)                       
+        if ema_crossover_defender_val == "L":
+            # print(f"ema_crossover signals_assum += 1")
+            signals_assum += 1  
+        elif ema_crossover_defender_val == "S":
+            # print(f"ema_crossover signals_assum -= 1")
+            signals_assum -= 1
+        # else:
+        #     print(f"ema_crossover signals_assum: None")
+   

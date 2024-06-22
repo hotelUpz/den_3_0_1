@@ -63,10 +63,14 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
         init_order_price, oposit_order_price = 0, 0
         last_depo = 0
         last_win_los, init_order_price, oposit_order_price, last_depo = self.last_statistic_control(self.symbol, self.depo)  
-        self.daily_trade_history_list.append((last_win_los, init_order_price, oposit_order_price, last_depo))   
+        self.daily_trade_history_list.append((last_win_los, init_order_price, oposit_order_price, last_depo))
+        self.last_win_los = last_win_los
         if last_win_los == -1:
             self.losses_counter += 1
+            if self.is_reverse_defencive_mehanizm:
+                self.is_reverse_signal = self.default_reverse_signal*(-1)
         else:
+            self.is_reverse_signal = self.default_reverse_signal
             self.losses_counter = 0
 
         self.post_trade_info_raport(last_signal, last_win_los)
@@ -252,7 +256,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                     #     async with session.ws_connect(url + f"{self.symbol}@kline_1s") as ws:
                     timeout = aiohttp.ClientTimeout(total=20)
                     async with aiohttp.ClientSession(timeout=timeout) as session:
-                        async with session.ws_connect(url + f"{self.symbol}@kline_1s", proxy=self.proxy_url) as ws:
+                        async with session.ws_connect(url + f"{self.symbol}@kline_1s", proxy=self.proxy_url if self.is_proxies_true else None) as ws:
                             subscribe_request = {
                                 "method": "SUBSCRIBE",
                                 "params": [f"{self.symbol.lower()}@kline_1s"],
@@ -282,7 +286,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                             cur_price = float(kline_websocket_data.get('c'))
                                             # print(f"last_close_price websocket: {cur_price}")                          
 
-                                            if (seconds_counter == 10) or (is_check_position):
+                                            if (seconds_counter == 2) or (is_check_position):
                                                 # print("try to check is_close_pos_true")                                               
                                                 if self.is_closing_position_true(self.symbol):
                                                     self.sl_order_id = sl_order_id
@@ -300,10 +304,10 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                                 
                                             seconds_counter += 1
                                             continue
-
-                                    async_cycle_retries += 1                                            
+                                          
                                 except Exception as ex:
-                                    async_cycle_retries += 1
+                                    pass
+                                async_cycle_retries += 1
                                         
                 except Exception as ex:
                     print(f"An error occurred: {ex}")

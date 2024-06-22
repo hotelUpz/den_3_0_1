@@ -12,6 +12,10 @@ class PARAMS(SEC_SETTINGSS):
         self.sl_order_id, self.tp_order_id = None, None
         self.target_tp_price = None
         self.last_stop_loss_price = None
+        self.start_depo = self.depo
+        self.lev_size_default = self.lev_size
+        self.retry_trade = False
+        self.last_win_los = None
         self.default_tg_vars()
         self.init_some_params()
         self.init_main_file_variables()
@@ -50,8 +54,6 @@ class PARAMS(SEC_SETTINGSS):
     def init_main_file_variables(self):
         self.symbol = None   
         self.vpvr_level_line = None
-        self.start_depo = self.depo
-        self.lev_size_default = self.lev_size
         self.candidate_symbols_list = [] 
         self.current_signal_val = None
         self.last_signal_val = None
@@ -92,7 +94,30 @@ class PARAMS(SEC_SETTINGSS):
 
     def ema_settings(self):
         self.interval = str(self.kline_time) + self.time_frame
-        self.indicators_strategy_list_list = [['ema_crossover'], ['ema_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_crossover'], ['ema_crossover', 'stoch_rsi_crossover', 'trend_line'], ['ema_crossover', 'stoch_rsi_overTrade'], ['ema_crossover', 'stoch_rsi_overTrade', 'trend_line'], ['trend_line', 'smart_random'], ['trading_view_ind'], ['trading_view_ind', 'trend_line'], ['ema_crossover', 'vpvr_level']]
+        self.indicators_strategy_list_list = [
+            ['ema_crossover'],
+            ['ema_crossover', 'trend_line'],
+            ['ema_crossover', 'anty_trend_line'],
+            ['ema_crossover', 'stoch_rsi_crossover'],
+            ['ema_crossover', 'stoch_rsi_crossover', 'trend_line'],
+            ['ema_crossover', 'stoch_rsi_overTrade'],
+            ['ema_crossover', 'stoch_rsi_overTrade', 'trend_line'],
+            ['ema_crossover', 'simple_random'],
+            ['ema_crossover', 'trande_shift_random'],
+            ['ema_crossover', 'long_shift_random'],
+            ['ema_crossover', 'short_shift_random'],
+
+            ['ema_crossover', 'vpvr_level'],
+
+            ['trading_view_ind'],
+            ['trading_view_ind', 'trend_line'],
+            ['trading_view_ind', 'anti_trend_line'],
+            ['ema_crossover', 'simple_random'],
+            ['ema_crossover', 'trande_shift_random'],
+            ['ema_crossover', 'long_shift_random'],
+            ['ema_crossover', 'short_shift_random'],
+
+        ]
         self.indicators_strategy_list = self.indicators_strategy_list_list[self.indicators_strategy_number - 1]
 
     def default_statistic_vars(self):        

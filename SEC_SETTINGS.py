@@ -11,11 +11,11 @@ class SEC_SETTINGSS(SETTINGSS):
         self.local_tz = pytz.timezone('Europe/Kiev') # 'Europe/Berlin' -- часовой пояс
 
         # //////////////////////////// НАСТРОЙКИ ФИЛЬТРА МОНЕТ:
-        self.default_black_coins_list = self.black_coins_list = ['BTCUSDT'] # монеты исключения
+        self.default_black_coins_list = self.black_coins_list = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'LTCUSDT'] # монеты исключения
         self.price_filter_flag = 0 # фильтр по цене. Сейчас отключен. Включить/выкл: - 1/0
         self.MIN_FILTER_PRICE = 0 # минимальный порог цены. Можете указать свое значение.
         self.MAX_FILTER_PRICE = math.inf # максимальный порог цены. Можете указать свое значение.
-        self.daily_filter_direction = 0 # 1 -- искать только которые показывают растущую динамику (зеленые графики). -1 --- для падающих (красные графики) на бинанс. 0 -- и то и другое
+        self.daily_filter_direction = 1 # 1 -- искать только которые показывают растущую динамику (зеленые графики). -1 --- для падающих (красные графики) на бинанс. 0 -- и то и другое
         self.slice_volum_flag = 1 # флаг фильтра по объему. Включить/выкл: - 1/0
         self.slice_volatilyty_flag = 1 # находить самые волатильные на бинанс. Включить/выкл: - 1/0
         self.SLICE_VOLATILITY = 90 # срез волатильности. То есть первые 40 самых волатильных
@@ -25,4 +25,4 @@ class SEC_SETTINGSS(SETTINGSS):
         self.volume_range_true = 0 # ранжировать по объему. Включить/выкл: - 1/0
         self.volatility_range_true = 1 # ранжировать по волатильности. Включить/выкл: - 1/0
         self.in_coinMarketCup_is = 1 # показывать только те монеты которые есть в топе Coin Market Cup. Включить/выкл: - 1/0
-        self.TOP_MARKET_CUP = 90 if self.indicators_strategy_number == 8 else 60 # срез монет. по коин маркет кап это будет первая тридцатка
+        self.TOP_MARKET_CUP = 99 if self.indicators_strategy_number == 8 else 98 # срез монет. по коин маркет кап это будет первая тридцатка

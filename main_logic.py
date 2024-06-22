@@ -21,9 +21,9 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     return False
                 self.in_position = False
                 self.is_trailing_stop_start = False
-                self.last_signal_val = None
-                self.wait_candle_flag = True
-                self.sl_risk_reward_multiplier = None
+                if (not self.classikal_martin_gale) or (self.last_win_los != -1):
+                    self.last_signal_val = None
+                    self.wait_candle_flag = True
                 self.order_id = None
                 self.sl_order_id, self.tp_order_id = None, None
                 self.last_stop_loss_price = None
@@ -37,9 +37,9 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     self.close_position_utilites(
                         self.last_signal_val
                     )
-                    self.last_signal_val = None
-                    self.wait_candle_flag = True
-                    self.sl_risk_reward_multiplier = None
+                    if (not self.classikal_martin_gale) or (self.last_win_los != -1):
+                        self.last_signal_val = None
+                        self.wait_candle_flag = True
                     self.order_id = None
                     self.sl_order_id, self.tp_order_id = None, None
                     self.last_stop_loss_price = None
@@ -47,19 +47,19 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                     msg = "Бот ищет следующий сигнал"
                     self.handle_messagee(msg)
                     return True
-            else:                            
+            elif not self.retry_trade:                            
                 # ////////////// ищем сигнал если закрыта:                
-                # start_time = int(time.time()*1000)
-                # print("начало поиска сигнала")
-                # print(f"coins_list_len: {len(coins_list)}")
+                start_time = int(time.time()*1000)
+                print("начало поиска сигнала")
+                print(f"coins_list_len: {len(coins_list)}")
                 try:
                     self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy)
+                    # print(self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data)
                 except Exception as ex: 
-                    pass 
-                    # self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = None, None, None, None                 
+                    pass           
                     # self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
-                # delta_time = int((int(time.time()*1000) - start_time)/ 1000)
-                # print(f"конец поиска сигнала: {delta_time} сек")             
+                delta_time = int((int(time.time()*1000) - start_time)/ 1000)
+                print(f"конец поиска сигнала: {delta_time} сек")             
                 if not self.current_signal_val:                    
                     # self.handle_messagee("нет сигнала")
                     self.is_no_signal_counter += 1
@@ -68,9 +68,11 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                         self.handle_messagee(msg)  
              
             # //////////////// анализ сигнала:
-            if self.current_signal_val:
+            if self.current_signal_val or self.retry_trade:
+                self.retry_trade = False
                 self.is_no_signal_counter = 0
-                
+                if (self.classikal_martin_gale) and (self.last_win_los == -1):
+                    self.current_signal_val = self.last_signal_val                
                 # Определяем тип сигнала
                 signal_type = "LONG_SIGNAL" if self.current_signal_val == 1 else "SHORT_SIGNAL"
                 
@@ -79,7 +81,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 self.handle_messagee(f"Наден: {signal_type}")
                 
                 # Проверяем реверс
-                if self.is_reverse_signal == -1:
+                if (self.is_reverse_signal == -1) and ((not self.classikal_martin_gale) or (self.last_win_los != -1) or (self.is_reverse_defencive_mehanizm)):
                     reversed_signal_type = "LONG_SIGNAL" if self.current_signal_val == -1 else "SHORT_SIGNAL"
                     self.handle_messagee(f"Применяем {reversed_signal_type} так как включен реверс")
                     self.current_signal_val *= self.is_reverse_signal                
@@ -89,6 +91,10 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 self.handle_messagee(f"Время сигнала: {ssignal_time}")
                 # /////
                 self.last_signal_val = self.current_signal_val
+
+                if (self.classikal_martin_gale) and (self.last_win_los == -1):
+                    self.cur_klines_data = self.get_klines(self.symbol, self.interval, self.ema_trend_line)
+                    self.cur_price = self.cur_klines_data['Close'].iloc[-1]
 
                 self.for_set_open_position_temp()
                                         
@@ -192,7 +198,8 @@ class MAIN_CONTROLLER(ENGINS):
             play_by_leveragee = "да" if self.play_by_leverage == 1 else "нет"
             if self.martin_gale_flag and self.max_martin_gale_counter_auto_true:
                 self.is_martin_gale_true_template()
-            trade_params_mess += (                
+            trade_params_mess += (  
+                f"Классический Мартин Гейл: {'да' if self.classikal_martin_gale else 'нет'}\n"              
                 f"Множитель Мартин Гейла: {self.martin_gale_ratio}\n"
                 f"Автоматически расчитывать допустимый счетчик Мартин Гейла: {martin_gale_auto_countt}\n"
                 f"Счетчик Мартин Гейла (сколько раз умножать позицию): {self.max_martin_gale_counter}\n"
@@ -212,7 +219,7 @@ class MAIN_CONTROLLER(ENGINS):
         next_show_statistic_time = self.get_next_show_statistic_time()
 
         while True:
-            time.sleep(0.05)
+            time.sleep(0.01)
 
             if self.losses_counter == self.losses_until_value:
                 self.stop_bot_flag = True
@@ -244,17 +251,19 @@ class MAIN_CONTROLLER(ENGINS):
                 self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
                 # mess_resp = 'Список монет кандидатов:\n' + '\n'.join(self.candidate_symbols_list)
                 # self.handle_messagee(mess_resp)
-            else:
-                wait_time = self.time_calibrator(1, 'm') if not self.in_position else 10
-            if self.is_trailing_stop_start == True:
+            elif (self.is_trailing_stop_start == True) or (self.classikal_martin_gale and self.last_win_los == -1):
                 wait_time = 0
-
+                if self.in_position:
+                    wait_time = 1
+            else:
+                wait_time = self.time_calibrator(1, 'm') if not self.in_position else 2
             time.sleep(wait_time)
             get_coins_counter += 1
             if get_coins_counter == get_coins_counter_reset_until:
-                self.candidate_symbols_list = self.get_top_coins_template()
-                self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
-                get_coins_counter = 0           
+                if not self.classikal_martin_gale or self.last_win_los != -1:
+                    self.candidate_symbols_list = self.get_top_coins_template()
+                    self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
+                    get_coins_counter = 0           
 
             if self.stop_loss_global_type in [1,2]:                
                 if self.candidate_symbols_list:
