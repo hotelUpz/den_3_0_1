@@ -171,10 +171,10 @@ class BINANCE_API(Total_Logger):
             proxies=self.proxiess if self.is_proxies_true else None
         )
         if positions.status_code == 200:
-            positions = positions.json()                        
+            positions = positions.json()               
             for position in positions:
+                # print(position)
                 if position['symbol'] == symbol and float(position['positionAmt']) != 0:
-                    #  and position['orderId'] == self.order_id:
                     return   
             return True        
         return
@@ -244,5 +244,8 @@ class BINANCE_API(Total_Logger):
         return
     
 # ba = BINANCE_API()
-# kl = ba.get_klines('BTCUSDT', '1m', 240)
-# print(kl)
+# symbol = 'DOGEUSDT'
+# # kl = ba.get_klines(symbol, '5m', 240)
+# # print(kl)
+# pos_open_true = ba.has_open_position(symbol)
+# print(pos_open_true)

@@ -5,6 +5,7 @@ import asyncio
 import json
 import random
 import os
+import inspect
 current_file = os.path.basename(__file__)
 
 class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
@@ -47,16 +48,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
 # ///////////////// шаблон для закрытия позиции:
     def close_position_utilites(self, last_signal):
         #//////////////// закрываем сотавшиеся ордера если таковые имеются:
-        _ = self.cancel_secondary_open_orders(self.symbol)
-        # print(cancel_secondary_open_orders_replay)
-        log_file = self.get_logs()
-        if log_file is None:
-            pass
-            # self.handle_messagee("Нет ошибок на текущий момент")
-        else:
-            if self.last_message:
-                self.handle_messagee("Данный цикл торговли отработал со следующими ошибками:")
-                self.bot.send_document(self.last_message.chat.id, log_file)            
+        _ = self.cancel_secondary_open_orders(self.symbol)     
 
         # //////////// show statistic: ///////////////////////////////
         last_win_los = 0
@@ -235,6 +227,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
             retries = 0            
             # /////////////////////////////////////
             seconds_counter = 0
+            seconds_counter_for_closing = 0
             # /////////////////////////
             is_problem_to_moved_sl = False
             is_check_position = False     
@@ -284,10 +277,15 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                         kline_websocket_data = data.get('k', {})
                                         if kline_websocket_data:
                                             cur_price = float(kline_websocket_data.get('c'))
-                                            # print(f"last_close_price websocket: {cur_price}")                          
+                                            # print(f"last_close_price websocket: {cur_price}")                         
 
                                             if (seconds_counter == 2) or (is_check_position):
-                                                # print("try to check is_close_pos_true")                                               
+                                                # print("try to check is_close_pos_true")
+                                                if self.closing_by_ema_crossover_flag:
+                                                    if seconds_counter_for_closing == 60:  
+                                                        self.closing_by_ema_crossover_signal_shell()                          
+                                                        seconds_counter_for_closing = 0                                            
+
                                                 if self.is_closing_position_true(self.symbol):
                                                     self.sl_order_id = sl_order_id
                                                     self.close_position_utilites(
@@ -303,6 +301,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                             stop_loss_step_counter, trigger_step_counter, sl_order_id, next_trigger_price, is_problem_to_moved_sl, is_check_position, last_stop_loss_price = self.trailing_sl_engin(cur_price, qty, enter_price, stop_loss_ratio, stop_loss_step_counter, trigger_step_counter, next_trigger_price, sl_order_id, is_problem_to_moved_sl, price_precession, sl_risk_reward_multiplier, last_signal_val, last_stop_loss_price)
                                                 
                                             seconds_counter += 1
+                                            seconds_counter_for_closing += 1
                                             continue
                                           
                                 except Exception as ex:
@@ -310,7 +309,7 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
                                 async_cycle_retries += 1
                                         
                 except Exception as ex:
-                    print(f"An error occurred: {ex}")
+                    self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")  
                 retries += 1
                 try:
                     await ws.close()
@@ -337,16 +336,67 @@ class TAKE_PROFIT_STOP_LOSS_STRATEGIES(STATISTIC):
         else:
             self.handle_messagee("Параметр 'self.secondary_orders_type' невалидный. Перезапустите бота и установите правильные настройки!")
             return
-
+        
+        # if self.only_stop_loss_flag:
         sl_risk_reward_multiplier = float(self.risk_reward_ratio.split(':')[0].strip())     
         self.last_stop_loss_price = target_sl_price = round((enter_price * (1 - current_signal_val * stop_loss_ratio * sl_risk_reward_multiplier)), self.price_precession)
         
-        price_precession = self.price_precession_limit if self.secondary_orders_type == 2 else self.price_precession        
+        price_precession = self.price_precession_limit if self.secondary_orders_type == 2 else self.price_precession 
+        # if self.only_take_profit_flag:       
         tp_risk_reward_multiplier = float(self.risk_reward_ratio.split(':')[1].strip())
         self.target_tp_price = target_tp_price = round((enter_price * (1 + current_signal_val * stop_loss_ratio * tp_risk_reward_multiplier)), price_precession)
 
         target_prices_list = [target_sl_price, target_tp_price]
+        if self.only_stop_loss_flag:
+            market_type_list.pop(1)
+            target_prices_list.pop(1)
+        if self.only_take_profit_flag:
+            market_type_list.pop(0)
+            target_prices_list.pop(0)
 
         in_position, sl_order_id, tp_order_id = self.make_sl_tp_template(executed_qty, market_type_list, target_prices_list)
 
-        return in_position, sl_risk_reward_multiplier, tp_risk_reward_multiplier, sl_order_id, tp_order_id
+        return in_position, sl_risk_reward_multiplier, tp_risk_reward_multiplier, sl_order_id, tp_order_id    
+    
+    def closing_by_ema_crossover_signal_shell(self):
+        def closing_by_ema_crossover_signal():
+            try:
+                df = self.get_klines(self.symbol, self.interval, self.ema_trend_line)
+                if not self.swirch_to_WMA_flag:
+                    df = self.calculate_ema(df)
+                else:
+                    df = self.calculate_wma(df)
+                ema_crossover_defender_val = self.ema_crossover_defender(df)
+                if self.last_signal_val == 1:                 
+                    if ema_crossover_defender_val == "S":
+                        print(f"ema_crossover close pos signal!")
+                        self.current_signal_val = self.last_signal_val*(-1)
+                        if not self.make_orders_template_shell():
+                            return 0
+                        return 1
+                    return 2
+                
+                elif self.last_signal_val == -1:                 
+                    if ema_crossover_defender_val == "L":
+                        print(f"ema_crossover close pos signal!")
+                        self.current_signal_val = self.last_signal_val*(-1)
+                        if not self.make_orders_template_shell():
+                            return 0
+                        return 1
+                    return 2
+                
+                return 3
+            except Exception as ex:
+                self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")  
+            return
+        
+        closing_by_ema_crossover_signal_repl = closing_by_ema_crossover_signal()
+        if closing_by_ema_crossover_signal_repl == 1:
+            self.handle_messagee("Позиция закрыта по сигналу кроссовер")
+        elif closing_by_ema_crossover_signal_repl == 0:
+            self.handle_messagee("Не удалось закрыть позицию по сигналу кроссовер")
+        elif closing_by_ema_crossover_signal_repl == 3:
+            self.handle_messagee("Информаци о направленности последней сделки недоступна")
+        elif closing_by_ema_crossover_signal_repl is None:
+            self.handle_messagee("В процессе попытки закрыть позицию по сигналу возникли какие-то ошибки")
+        

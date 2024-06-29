@@ -22,13 +22,55 @@ class TEMPLATES(INFO):
         set_leverage_resp = self.set_leverage(self.symbol, self.lev_size)
         self.handle_messagee(str(set_leverage_resp))
         return True 
-    
+        
     def get_top_coins_template(self):
+        # Получение всех тикеров и тикеров с CoinMarketCap, если требуется
         all_binance_tickers = self.get_all_tickers()
-        coinsMarket_tickers = []
-        if self.in_coinMarketCup_is:
-            coinsMarket_tickers = self.coin_market_cup_top(self.TOP_MARKET_CUP) 
-        return self.go_filter(all_binance_tickers, coinsMarket_tickers)
+        coinsMarket_tickers = self.coin_market_cup_top(self.TOP_MARKET_CUP) if self.in_coinMarketCup_is else []
+
+        # Фильтрация тикеров
+        total_coin_list, coin_list_by_volume, coin_list_by_positive_price, coin_list_by_negative_price = self.go_filter(all_binance_tickers, coinsMarket_tickers)
+        
+        # Обработка флага рыночного тренда
+        pos_len = len(coin_list_by_positive_price)
+        neg_len = len(coin_list_by_negative_price)
+        
+        if pos_len == 0 and neg_len == 0:
+            self.only_long_trading = False
+            self.only_short_trading = False
+        elif pos_len == 0 and neg_len != 0:
+            self.only_long_trading = False
+            self.only_short_trading = True
+        elif neg_len == 0 and pos_len != 0:
+            self.only_long_trading = True
+            self.only_short_trading = False
+        else:
+            ratio = pos_len / neg_len
+            if ratio >= 2:
+                self.only_long_trading = True
+                self.only_short_trading = False
+            elif ratio <= 0.5:
+                self.only_long_trading = False
+                self.only_short_trading = True
+            else:
+                self.only_long_trading = False
+                self.only_short_trading = False
+        if not self.defend_total_market_trend_flag:
+            self.only_long_trading = self.only_long_trading_default
+            self.only_short_trading = self.only_short_trading_default
+
+        try:
+            print(f"L:S: -- {pos_len} {neg_len}")
+            print(f"L/S: {pos_len / neg_len}")
+        except ZeroDivisionError:
+            pass
+        
+        print(f"self.only_long_trading: {self.only_long_trading}")
+        print(f"self.only_short_trading: {self.only_short_trading}")
+
+        return total_coin_list
+
+
 
     def set_trade_nessasareses_templates(self):
         try:            
@@ -58,8 +100,7 @@ class TEMPLATES(INFO):
             except Exception as ex:
                 self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")  
             return response_list, self.response_order_logger(order_answer, side, market_type) 
-        
-        self.last_direction = self.current_signal_val
+
         self.response_trading_list, self.create_order_success_flag = make_orders_template(self.qty, 'MARKET', None)
 
         if not self.create_order_success_flag:

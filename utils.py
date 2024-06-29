@@ -50,40 +50,76 @@ class COInN_FILTERR(INDICATORS_STRATEGYY):
         return       
 
     def go_filter(self, all_binance_tickers, coinsMarket_tickers):
-        top_pairs = []            
+        top_pairs_total = []  
+        top_pairs_by_volum = []
+        top_pairs_by_positive_price = []  
+        top_pairs_by_negative_price = []       
         exclusion_contains_list = ['UP', 'DOWN', 'RUB', 'EUR']
+        exclusion_contains_list += self.black_coins_list
 
         if all_binance_tickers:
             if not self.price_filter_flag:
                 self.MIN_FILTER_PRICE = 0
                 self.MAX_FILTER_PRICE = math.inf                   
 
-            top_pairs = [ticker for ticker in all_binance_tickers if
-                            ticker['symbol'].upper().endswith('USDT') and
-                            not any(exclusion in ticker['symbol'].upper() for exclusion in exclusion_contains_list) and
-                            (float(ticker['lastPrice']) >= self.MIN_FILTER_PRICE) and (
-                                    float(ticker['lastPrice']) <= self.MAX_FILTER_PRICE)]
+            def is_valid_ticker(ticker, exclusion_contains_list, min_price, max_price, black_coins_list, coinsMarket_tickers, in_coinMarketCup_is):
+                symbol = ticker['symbol'].upper()
+                last_price = float(ticker['lastPrice'])
+                
+                common_conditions = (
+                    symbol.endswith('USDT') and
+                    all(exclusion not in symbol for exclusion in exclusion_contains_list) and
+                    min_price <= last_price <= max_price
+                )
+                
+                if in_coinMarketCup_is:
+                    return common_conditions and symbol in coinsMarket_tickers
+                else:
+                    return common_conditions
+
+            top_pairs_total = [
+                ticker for ticker in all_binance_tickers
+                if is_valid_ticker(
+                    ticker, 
+                    exclusion_contains_list, 
+                    self.MIN_FILTER_PRICE, 
+                    self.MAX_FILTER_PRICE, 
+                    self.black_coins_list, 
+                    coinsMarket_tickers, 
+                    self.in_coinMarketCup_is
+                )
+            ]
+
             if self.slice_volum_flag:
-                top_pairs = sorted(top_pairs, key=lambda x: float(x['quoteVolume']), reverse=True)
-                top_pairs = top_pairs[:self.SLICE_VOLUME_BINANCE_PAIRS]
+                top_pairs_total = top_pairs_by_volum = sorted(top_pairs_total, key=lambda x: float(x['quoteVolume']), reverse=True)
+                top_pairs_total = top_pairs_by_volum = top_pairs_total[:self.SLICE_VOLUME_BINANCE_PAIRS]
 
             if self.min_volume_usdtFilter_flag:
-                top_pairs = [x for x in top_pairs if float(x['quoteVolume']) >= self.MIN_VOLUM_USDT]
+                top_pairs_total = top_pairs_by_volum = [x for x in top_pairs_total if float(x['quoteVolume']) >= self.MIN_VOLUM_USDT]
 
             if self.slice_volatilyty_flag:
-                top_pairs = sorted(top_pairs, key=lambda x: abs(float(x['priceChangePercent'])), reverse=True)
-                top_pairs = top_pairs[:self.SLICE_VOLATILITY]
-            if self.daily_filter_direction == 1:
-                top_pairs = [x for x in top_pairs if float(x['priceChange']) > 0]
-            elif self.daily_filter_direction == -1:
-                top_pairs = [x for x in top_pairs if float(x['priceChange']) < 0]
+                top_pairs_total = sorted(top_pairs_total, key=lambda x: abs(float(x['priceChangePercent'])), reverse=True)
+                top_pairs_total = top_pairs_total[:self.SLICE_VOLATILITY]
+
+            top_pairs_by_positive_price = [x for x in top_pairs_total if float(x['priceChange']) > 0]
+            top_pairs_by_negative_price = [x for x in top_pairs_total if float(x['priceChange']) < 0]
+
+            if self.daily_filter_direction == 1 and not self.defend_total_market_trend_flag:
+                top_pairs_total = top_pairs_by_positive_price
+            elif self.daily_filter_direction == -1 and not self.defend_total_market_trend_flag:
+                top_pairs_total = top_pairs_by_negative_price 
+            else:
+                top_pairs_total = top_pairs_by_positive_price + top_pairs_by_negative_price
+
             if self.volume_range_true:
-                top_pairs = sorted(top_pairs, key=lambda x: float(x['quoteVolume']), reverse=True)
+                top_pairs_total = sorted(top_pairs_total, key=lambda x: float(x['quoteVolume']), reverse=True)
             if self.volatility_range_true:
-                top_pairs = sorted(top_pairs, key=lambda x: abs(float(x['priceChangePercent'])), reverse=True)
-            if self.in_coinMarketCup_is:
-                return [x['symbol'] for x in top_pairs if x['symbol'] not in self.black_coins_list and x['symbol'] in coinsMarket_tickers]
-            return [x['symbol'] for x in top_pairs if x['symbol'] not in self.black_coins_list]
+                top_pairs_total = sorted(top_pairs_total, key=lambda x: abs(float(x['priceChangePercent'])), reverse=True)
+            top_pairs_total = [x['symbol'] for x in top_pairs_total]
+            top_pairs_by_volum = [x['symbol'] for x in top_pairs_by_volum]
+            top_pairs_by_positive_price = [x['symbol'] for x in top_pairs_by_positive_price]
+            top_pairs_by_negative_price = [x['symbol'] for x in top_pairs_by_negative_price]
+            return top_pairs_total, top_pairs_by_volum, top_pairs_by_positive_price, top_pairs_by_negative_price
 
 class UTILS(COInN_FILTERR):
     def __init__(self):  

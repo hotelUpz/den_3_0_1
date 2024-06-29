@@ -10,6 +10,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
         super().__init__()
         # устанавливаем функциии декораторы
         self.engin_1_2 = self.log_exceptions_decorator(self.engin_1_2)
+        self.seconds_counter_for_closing = 0
 
     def engin_1_2(self, coins_list):
         try:
@@ -31,6 +32,11 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 return True      
             # /////////////// проверка открыта ли позиция:
             if self.in_position:
+                if self.closing_by_ema_crossover_flag:
+                    self.seconds_counter_for_closing += 1
+                    if self.seconds_counter_for_closing == 30:  
+                        self.closing_by_ema_crossover_signal_shell()                          
+                        self.seconds_counter_for_closing = 0  
                 if self.is_closing_position_true(self.symbol):
                     # //////////////////// дополнительные действия после закрытия позиции (отмена оставшихся ордеров, анализ сделки и короткий отчет)
                     self.in_position = False
@@ -53,7 +59,7 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 print("начало поиска сигнала")
                 print(f"coins_list_len: {len(coins_list)}")
                 try:
-                    self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list, self.ema1_period, self.ema2_period, self.ema_trend_line, self.stoch_rsi_over_sell, self.stoch_rsi_over_buy)
+                    self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data = self.get_signals(self.indicators_strategy_list, coins_list)
                     # print(self.symbol, self.current_signal_val, self.cur_price, self.cur_klines_data)
                 except Exception as ex: 
                     pass           
@@ -69,6 +75,15 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
              
             # //////////////// анализ сигнала:
             if self.current_signal_val or self.retry_trade:
+                if not self.retry_trade:
+                    if not self.is_closing_position_true(self.symbol):
+                        self.black_coins_list.append(self.symbol)
+                        self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
+                        self.wait_candle_flag = True
+                        self.handle_messagee(f"Позиция {self.symbol} была открыта ранее, поэтому бот не может открыть торги по этой монете. Сигнал проигнорирован, монета внесена в черный список.")
+                        return 2
+
+                # return
                 self.retry_trade = False
                 self.is_no_signal_counter = 0
                 if (self.classikal_martin_gale) and (self.last_win_los == -1):
@@ -80,11 +95,14 @@ class ENGINS(TAKE_PROFIT_STOP_LOSS_STRATEGIES):
                 self.handle_messagee(f"Монета: {self.symbol}")
                 self.handle_messagee(f"Наден: {signal_type}")
                 
-                # Проверяем реверс
-                if (self.is_reverse_signal == -1) and ((not self.classikal_martin_gale) or (self.last_win_los != -1) or (self.is_reverse_defencive_mehanizm)):
-                    reversed_signal_type = "LONG_SIGNAL" if self.current_signal_val == -1 else "SHORT_SIGNAL"
-                    self.handle_messagee(f"Применяем {reversed_signal_type} так как включен реверс")
-                    self.current_signal_val *= self.is_reverse_signal                
+                if self.last_win_los == -1 and (self.classikal_martin_gale or self.is_reverse_defencive_mehanizm):   
+                    pass
+                else:
+                    # Проверяем реверс
+                    if (self.is_reverse_signal == -1):
+                        reversed_signal_type = "LONG_SIGNAL" if self.current_signal_val == -1 else "SHORT_SIGNAL"
+                        self.handle_messagee(f"Применяем {reversed_signal_type} так как включен реверс")
+                        self.current_signal_val *= self.is_reverse_signal
                 # ///
                 now_time = dttm.now(self.local_tz)
                 ssignal_time = now_time.strftime('%Y-%m-%d %H:%M:%S')
@@ -154,23 +172,24 @@ class MAIN_CONTROLLER(ENGINS):
             f"Стратегия индикатора: {self.indicators_strategy_number} -- {self.indicators_strategy_text_patterns[f'{self.indicators_strategy_number}']}\n"
         )
 
-        if self.indicators_strategy_number not in [8,9]:
+        if self.indicators_strategy_number in list(range(1,13)):
             trade_params_mess += (
                 f"Длина короткой EMA: {self.ema1_period}\n"
                 f"Длина длинной EMA: {self.ema2_period}\n"                
             )
 
-        if self.indicators_strategy_number in [2, 4, 6, 7, 9]:
+        if self.indicators_strategy_number in [2, 3, 7, 9, 14, 15, 17]:
             trade_params_mess += (
                 f"Длина тренда EMA: {self.ema_trend_line}\n"
             )
-        if self.indicators_strategy_number in [5, 6]:
+        if self.indicators_strategy_number in [6, 7]:
             trade_params_mess += (
                 f"Уровень перепроданности stoch_rsi: {self.stoch_rsi_over_sell}\n"
                 f"Уровень перекупленности stoch_rsi: {self.stoch_rsi_over_buy}\n"
             )
         trade_params_mess += (
             f"Антистратегия (противоположный сигнал): {asnty_strategyy}\n"
+            f"Реверсировать сигнал в случае неудачной сделки: {'да' if self.is_reverse_defencive_mehanizm else 'нет'}\n"
             f"Прокси соединение: {is_proxyy}\n"            
             f"Стратегия TP/SL: {self.stop_loss_global_type} -- {self.stop_loss_global_type_text_patterns[f'{self.stop_loss_global_type}']}\n"
             f"Способ расчета стоп лосс коэффициента: {self.stop_loss_ratio_mode} -- {self.stop_loss_ratio_mode_text_patterns[f'{self.stop_loss_ratio_mode}']}\n"
@@ -188,6 +207,7 @@ class MAIN_CONTROLLER(ENGINS):
         trade_params_mess += (
             f"Тайм фрейм: {self.interval}\n"
             f"Соотношение риска к прибыли: {self.risk_reward_ratio}\n"
+            f"Использовать сигнал кроссовер для закрытия позиции: {'да' if self.closing_by_ema_crossover_flag else 'нет'}\n"
             f"Мартин Гейл {martin_gale_status}\n"
         )
         
@@ -210,10 +230,9 @@ class MAIN_CONTROLLER(ENGINS):
 
     def main_func(self):
         # self.last_date = self.date_of_the_month()        
-        empty_candidate_list_counter = 0
         engin_answ = None
         get_coins_counter = 0
-        get_coins_counter_reset_until = 30
+        get_coins_counter_reset_until = 20
         is_show_statistic_true, next_show_statistic_time = None, None
         self.stratigiee_info()
         next_show_statistic_time = self.get_next_show_statistic_time()
@@ -249,6 +268,7 @@ class MAIN_CONTROLLER(ENGINS):
                 self.handle_messagee(msg)
                 self.candidate_symbols_list = self.get_top_coins_template()
                 self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
+                print(f"self.candidate_symbols_list_len : {len(self.candidate_symbols_list)}")
                 # mess_resp = 'Список монет кандидатов:\n' + '\n'.join(self.candidate_symbols_list)
                 # self.handle_messagee(mess_resp)
             elif (self.is_trailing_stop_start == True) or (self.classikal_martin_gale and self.last_win_los == -1):
@@ -258,22 +278,19 @@ class MAIN_CONTROLLER(ENGINS):
             else:
                 wait_time = self.time_calibrator(1, 'm') if not self.in_position else 2
             time.sleep(wait_time)
-            get_coins_counter += 1
-            if get_coins_counter == get_coins_counter_reset_until:
-                if not self.classikal_martin_gale or self.last_win_los != -1:
-                    self.candidate_symbols_list = self.get_top_coins_template()
-                    self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
-                    get_coins_counter = 0           
+            
+            if not self.in_position:
+                get_coins_counter += 1
+                if get_coins_counter == get_coins_counter_reset_until:
+                    if not self.classikal_martin_gale or self.last_win_los != -1:
+                        self.candidate_symbols_list = self.get_top_coins_template()
+                        self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
+                        get_coins_counter = 0  
+          
+            if self.candidate_symbols_list:
+                engin_answ = self.engin_1_2(self.candidate_symbols_list)
+                if not engin_answ:
+                    self.stop_bot_flag = True
+                    continue
 
-            if self.stop_loss_global_type in [1,2]:                
-                if self.candidate_symbols_list:
-                    engin_answ = self.engin_1_2(self.candidate_symbols_list)
-                    if not engin_answ:
-                        self.stop_bot_flag = True
-                        continue
-                else:
-                    empty_candidate_list_counter += 1 
-                if empty_candidate_list_counter == 30:
-                    self.handle_messagee("Список монет кандидатов пуст на протяжение 30 попыток поиска...")
-                    empty_candidate_list_counter = 0
 

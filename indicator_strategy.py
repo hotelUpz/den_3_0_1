@@ -1,19 +1,30 @@
 import pandas as pd
-# import pandas_ta as ta
-from tradingview_ta import get_multiple_analysis
 from random import choice
+import pandas as pd
+import pandas_ta as ta
+import numpy as np
 from api_binance import BINANCE_API
 import time
 import os
 import inspect
 current_file = os.path.basename(__file__)
 
+# self.swirch_to_WMA_flag
+
 class INDICATORS(BINANCE_API):
     def __init__(self) -> None:
         super().__init__()  
         # устанавливаем функциии декораторы
         self.calculate_ema = self.log_exceptions_decorator(self.calculate_ema)
+        self.calculate_wma = self.log_exceptions_decorator(self.calculate_wma)
         self.calculate_atr = self.log_exceptions_decorator(self.calculate_atr)
+        self.calculate_stoch_rsi = self.log_exceptions_decorator(self.calculate_stoch_rsi)
+        self.calculate_vpvr = self.log_exceptions_decorator(self.calculate_vpvr)
+        self.find_vpvr_levels = self.log_exceptions_decorator(self.find_vpvr_levels)
+        self.calculate_anomalous_volume_1 = self.log_exceptions_decorator(self.calculate_anomalous_volume_1)
+        self.calculate_anomalous_volume_2 = self.log_exceptions_decorator(self.calculate_anomalous_volume_2)
+        # self.filter_flat_coins_by_BB_and_KC = self.log_exceptions_decorator(self.filter_flat_coins_by_BB_and_KC)
+        # self.change_volatility_indicator = self.log_exceptions_decorator(self.change_volatility_indicator)
 
     def indicators_documentation(self):
         """
@@ -35,28 +46,43 @@ class INDICATORS(BINANCE_API):
             # 11 -- 'ema_crossover + short_shift_random': кроссовер ema как тригер но выбор сигнала рандомный со смещением вероятности в шортовую сторону. Вероятность выбора 1:1.6. Можно попробовать с настройкой фильтра self.daily_filter_direction = -1, то есть на медвежьем рынке
 
                             # (инновационные)
-            # 12 - 'ema_crossover + vpvr_level' # кроссовер ema плюс + vpvr индикатор
-
-            # //////// СТРАТЕГИИ ТРЕЙДИНГ-ВЬЮ индикатора:
-            # 13 - 'trading_view_ind' # индикатор трейдинг вью
-            # 14 - 'trading_view_ind + trend_line' # индикатор трейдинг вью + ориентироваться на линию тренда
-            # 15 - 'trading_view_ind + anti_trend_line' # индикатор трейдинг вью + ориентироваться на анти трендовую линию
-            # 16 -- 'trading_view_ind + simple_random': : индикатор трейдинг вью как тригер но выбор сигнала рандомный. Вероятность выбора 1:1
-            # 17 -- 'trading_view_ind + trande_shift_random': индикатор трейдинг вью как тригер но выбор сигнала рандомный со смещением вероятности в сторону тренда. Вероятность выбора 1:1.6
-            # 18 -- 'trading_view_ind + long_shift_random': индикатор трейдинг вью как тригер но выбор сигнала рандомный со смещением вероятности в лонговую сторону. Вероятность выбора 1:1.6. Можно попробовать с настройкой фильтра self.daily_filter_direction = 1, то есть на бычьем рынке
-            # 19 -- 'trading_view_ind + short_shift_random': индикатор трейдинг вью как тригер но выбор сигнала рандомный со смещением вероятности в шортовую сторону. Вероятность выбора 1:1.6. Можно попробовать с настройкой фильтра self.daily_filter_direction = -1, то есть на медвежьем рынке   
-        """
-   
+            # 12 - 'ema_crossover + vpvr_level' # кроссовер ema плюс + vpvr индикатор 
+            # 13 - 'find_coins_in_flat + volum_splash_indicator' # ищим флеты и ждем всплеска обьема 
+        """  
+    
     def calculate_ema(self, data):
         close = data['Close']
-        ema1 = close.ewm(span=self.ema1_period, adjust=False).mean()
-        ema2 = close.ewm(span=self.ema2_period, adjust=False).mean()
-        ema3 = close.ewm(span=self.ema_trend_line, adjust=False).mean()
-        data[f"EMA{self.ema1_period}"] = ema1
-        data[f"EMA{self.ema2_period}"] = ema2
-        data[f"EMA{self.ema_trend_line}"] = ema3
+        # if not self.peacock_tail_EMA_flag:
+        data[f"{self.ma_key_name}{self.ema1_period}"] = close.ewm(span=self.ema1_period, adjust=False).mean()
+        data[f"{self.ma_key_name}{self.ema2_period}"] = close.ewm(span=self.ema2_period, adjust=False).mean()
+        # else:
+        #     data[f"{self.ma_key_name}{self.EMA_degree_tuple[0]}"] = close.ewm(span=self.EMA_degree_tuple[0], adjust=False).mean()
+        #     data[f"{self.ma_key_name}{self.EMA_degree_tuple[1]}"] = close.ewm(span=self.EMA_degree_tuple[1], adjust=False).mean()
+        #     data[f"{self.ma_key_name}{self.EMA_degree_tuple[2]}"] = close.ewm(span=self.EMA_degree_tuple[2], adjust=False).mean()
+        #     data[f"{self.ma_key_name}{self.EMA_degree_tuple[3]}"] = close.ewm(span=self.EMA_degree_tuple[3], adjust=False).mean()
+        data[f"{self.ma_key_name}{self.ema_trend_line}"] = close.ewm(span=self.ema_trend_line, adjust=False).mean()
         data.dropna(inplace=True)
-        return data    
+        return data
+
+    def calculate_wma(self, data):
+        close = data['Close']
+
+        def weighted_moving_average(values, window):
+            weights = np.arange(1, window + 1)
+            return values.rolling(window).apply(lambda prices: np.dot(prices, weights) / weights.sum(), raw=True)
+
+        # if not self.peacock_tail_EMA_flag:
+        data[f"{self.ma_key_name}{self.ema1_period}"] = weighted_moving_average(close, self.ema1_period)
+        data[f"{self.ma_key_name}{self.ema2_period}"] = weighted_moving_average(close, self.ema2_period)
+        # else:
+        #     data[f"{self.ma_key_name}{self.EMA_degree_tuple[0]}"] = weighted_moving_average(close, self.EMA_degree_tuple[0])
+        #     data[f"{self.ma_key_name}{self.EMA_degree_tuple[1]}"] = weighted_moving_average(close, self.EMA_degree_tuple[1])
+        #     data[f"{self.ma_key_name}{self.EMA_degree_tuple[2]}"] = weighted_moving_average(close, self.EMA_degree_tuple[2])
+        #     data[f"{self.ma_key_name}{self.EMA_degree_tuple[3]}"] = weighted_moving_average(close, self.EMA_degree_tuple[3])
+            
+        data[f"{self.ma_key_name}{self.ema_trend_line}"] = weighted_moving_average(close, self.ema_trend_line)
+        data.dropna(inplace=True)
+        return data  
 
     def calculate_stoch_rsi(self, data):
         close = data['Close']
@@ -117,26 +143,8 @@ class INDICATORS(BINANCE_API):
         data_copy.dropna(inplace=True)
 
         return data_copy, atr[-1]
-
-    # def calculate_ema(self, data):
-    #     data[f"EMA{self.ema1_period}"] = ta.ema(data['Close'], length=self.ema1_period)
-    #     data[f"EMA{self.ema2_period}"] = ta.ema(data['Close'], length=self.ema2_period)
-    #     data[f"EMA{self.ema_trend_line}"] = ta.ema(data['Close'], length=self.ema_trend_line) 
-    #     data.dropna(inplace=True)
-    #     return data
     
-    # def calculate_stoch_rsi(self, data):
-    #     stoch_rsi = ta.stochrsi(data['Close'], length=14, rsi_length=14, k=3, d=3)
-    #     data['StochRSI_%K'] = stoch_rsi['STOCHRSIk_14_14_3_3']
-    #     data['StochRSI_%D'] = stoch_rsi['STOCHRSId_14_14_3_3']
-    #     data.dropna(inplace=True)
-    #     return data 
-    
-    # def calculate_atr(self, data, atr_period):
-    #     data[f"ATR{atr_period}"] = ta.atr(data['High'], data['Low'], data['Close'], length=atr_period)
-    #     data.dropna(inplace=True)
-    #     return data, data[f"ATR{atr_period}"].iloc[-1]
-    
+    # //////////////////////// volums assets:    
     def calculate_vpvr(self, data, min_bins=10, max_bins=50):
         # Вычисляем динамическое количество корзин (bins) на основе количества свечей
         num_candles = self.ema_trend_line
@@ -152,34 +160,77 @@ class INDICATORS(BINANCE_API):
         # Поиск наиболее объемных зон VPVR
         top_vpvr_indexes = vpvr.nlargest(num_levels).index
         vpvr_levels = [(index.left, index.right, (index.left + index.right)/2, vpvr[index]) for index in top_vpvr_indexes]
-        return vpvr_levels
+        return vpvr_levels    
+
+    # ///////// for 13 ind number:
+    def calculate_anomalous_volume_1(self, df):
+        # 1. Вычисляем скользящее среднее по объему
+        df['AverageVolume'] = df['Volume'].rolling(window=self.average_volume_window).mean()
+
+        # 2. Рассчитываем перцентиль средне минимального и среднемаксимального процентиля без последнего значения
+        low_percentile_value = df['Volume'].iloc[:-1].rolling(window=self.average_volume_window).quantile(q=self.low_volume_percentile_anomalous_volume_1)
+        
+        high_percentile_value = df['Volume'].iloc[:-1].rolling(window=self.average_volume_window).quantile(q=self.high_volume_percentile_anomalous_volume_1)
+        
+        # 3. Проверяем условия аномального объема
+        conditions_1 = all(df['Volume'].iloc[i] < low_percentile_value.iloc[-1] for i in range(-6, -1))
+        # 4. Последняя свеча выше значения перцентиля
+        conditions_2 = df['Volume'].iloc[-1] > high_percentile_value.iloc[-1]
+        
+        # 6. Определение направления объема (зеленый или красный)
+        df['VolumeDirection'] = np.where(df['Close'] > df['Open'], 1, -1)
+
+        return conditions_1 and conditions_2, df['VolumeDirection'].iloc[-1]
     
-    def immediate_vpvr_level_defender(self, cur_price, vpvr_levels):
-        disposition = (vpvr_levels[0][0] <= cur_price <= vpvr_levels[0][1]) or \
-                    (vpvr_levels[1][0] <= cur_price <= vpvr_levels[1][1])
-        if not disposition:
-            immediate_level = min(abs(vpvr_levels[0][2] - cur_price), abs(vpvr_levels[1][2] - cur_price)) + cur_price
-            strongest_volum_level = [0, 0]
+    # ///////////// for 14 ind number:
+    def calculate_anomalous_volume_2(self, df):
+        # Расчет среднего и стандартного отклонения объема
+        df['AverageVolume'] = df['Volume'].rolling(window=self.average_volume_window).mean()
+        df['StdVolume'] = df['Volume'].rolling(window=self.average_volume_window).std()
 
-            for _, _, m, v in vpvr_levels:
-                cur_volum_level = v / (1 + abs(cur_price - m) / cur_price)
-                if cur_volum_level > strongest_volum_level[0]:
-                    strongest_volum_level = [cur_volum_level, m]                                
+        # Расчет верхней границы для аномального объема
+        df['UpperVolumeLimit'] = df['AverageVolume'] + self.std_multiplier_anomalous_volume_2 * df['StdVolume']
 
-            if vpvr_levels[0][2] > cur_price and vpvr_levels[1][2] > cur_price:
-                return "L", immediate_level
-            elif vpvr_levels[0][2] < cur_price and vpvr_levels[1][2] < cur_price:
-                return "S", immediate_level
-            elif strongest_volum_level[1] > cur_price:
-                return "L", strongest_volum_level[1]
-            elif strongest_volum_level[1] < cur_price:
-                return "L", strongest_volum_level[1]
+        # Определение, является ли текущий объем аномальным
+        df['AnomalousVolume'] = df['Volume'] > df['UpperVolumeLimit']         
+        
+        # 6. Определение направления объема (зеленый или красный)
+        df['VolumeDirection'] = np.where(df['Close'] > df['Open'], 1, -1)
 
-        return
-    # ////////////////////
+        return df['AnomalousVolume'].iloc[-1], df['VolumeDirection'].iloc[-1]
+    
+    def filter_flat_coins_by_BB_and_KC(self, data, atr_period):
+        df = data.copy()
+        df['sma'] = df['Close'].rolling(window=atr_period).mean()
+        df['stddev'] = df['Close'].rolling(window=atr_period).std()
+        df['lower_band'] = df['sma'] - (self.BB_stddev_MULTIPLITER * df['stddev'])
+        df['upper_band'] = df['sma'] + (self.BB_stddev_MULTIPLITER * df['stddev'])
+
+        df['TR'] = abs(df['High'] - df['Low'])
+        df['ATR'] = df['TR'].rolling(window=20).mean()
+
+        df['lower_keltner'] = df['sma'] - (df['ATR'] * self.KC_stddev_MULTIPLITER)
+        df['upper_keltner'] = df['sma'] + (df['ATR'] * self.KC_stddev_MULTIPLITER)
+        
+        # Проверяем условие для последних шести свечей
+        last_6_rows = df.iloc[-6:]        
+        return (last_6_rows['lower_band'] > last_6_rows['lower_keltner']).all() & \
+            (last_6_rows['upper_band'] < last_6_rows['upper_keltner']).all()
+        
+class CONDITION_ANALYSES(INDICATORS):
+    def __init__(self) -> None:
+        super().__init__() 
+        # self.check_stairwell_ema = self.log_exceptions_decorator(self.check_stairwell_ema)
+        self.trend_line_defender = self.log_exceptions_decorator(self.trend_line_defender)
+        self.ema_crossover_defender = self.log_exceptions_decorator(self.ema_crossover_defender)
+        self.stoch_rsi_srossover_defender = self.log_exceptions_decorator(self.stoch_rsi_srossover_defender)
+        self.stoch_rsi_overTrade_defender = self.log_exceptions_decorator(self.stoch_rsi_overTrade_defender)
+        self.random_defender = self.log_exceptions_decorator(self.random_defender)
+        # self.flat_filter_handler = self.log_exceptions_decorator(self.flat_filter_handler)
+
     def trend_line_defender(self, df):
-        ema2= df[f"EMA{self.ema2_period}"].iloc[-1]
-        ema3 = df[f"EMA{self.ema_trend_line}"].iloc[-1]
+        ema2= df[f"{self.ma_key_name}{self.ema2_period}"].iloc[-1]
+        ema3 = df[f"{self.ma_key_name}{self.ema_trend_line}"].iloc[-1]
         if ema2 > ema3:
             return "L"
         if ema2 < ema3:
@@ -187,8 +238,8 @@ class INDICATORS(BINANCE_API):
         return
 
     def ema_crossover_defender(self, df):
-        ema1 = df[f"EMA{self.ema1_period}"]
-        ema2 = df[f"EMA{self.ema2_period}"]
+        ema1 = df[f"{self.ma_key_name}{self.ema1_period}"]
+        ema2 = df[f"{self.ma_key_name}{self.ema2_period}"]
         if (ema1.iloc[-1] > ema2.iloc[-1] and ema1.iloc[-2] < ema2.iloc[-2]):
             return "L"
         if (ema1.iloc[-1] < ema2.iloc[-1] and ema1.iloc[-2] > ema2.iloc[-2]):
@@ -212,184 +263,212 @@ class INDICATORS(BINANCE_API):
             return "S"
         return
     
-    # /////// trading view indicator:
-    def get_tv_signals(self, coins_list):
+    def random_defender(self, strategy_list, long_trend, short_trend):
+        
+        if 'simple_random' in strategy_list:
+            random_list = [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
+            if choice(random_list) % 2 != 0:
+                return 1
+            else:
+                return -1
 
-        all_coins_indicators = None
-        signals_list = []      
-        symbols = [f"BINANCE:{x}" for x in coins_list if x]
+        if {'trande_shift_random', 'long_shift_random', 'short_shift_random'} & set(strategy_list):
+            if 'trande_shift_random' in strategy_list:
+                if long_trend:
+                    random_list = [1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2]
 
-        all_coins_indicators = get_multiple_analysis(symbols=symbols,
-                            screener='crypto',                    
-                            interval=self.interval)
+                elif short_trend:
+                    random_list = [2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1]
 
-        for _, item in all_coins_indicators.items():
-            recommendation = None
-            symbol = None
-            try:
-                symbol = item.symbol
-                recommendation = item.summary["RECOMMENDATION"]
-            except:
-                continue
-            if (recommendation == 'STRONG_BUY'):
-                signals_list.append((symbol, 1))          
+                if long_trend or short_trend:                         
+                    if choice(random_list) % 2 != 0:
+                        return 1
+                    else:
+                        return -1
+            else:
+                if 'long_shift_random' in strategy_list:
+                    random_list = [1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2]
+                if 'short_shift_random' in strategy_list:
+                    random_list = [2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1]
+                if choice(random_list) % 2 != 0:
+                    return 1
+                else:
+                    return -1
+        return    
+    
+    def immediate_vpvr_level_defender(self, cur_price, vpvr_levels):
+        disposition = (vpvr_levels[0][0] <= cur_price <= vpvr_levels[0][1]) or \
+                    (vpvr_levels[1][0] <= cur_price <= vpvr_levels[1][1])
+        if not disposition:
+            immediate_level = min(abs(vpvr_levels[0][2] - cur_price), abs(vpvr_levels[1][2] - cur_price)) + cur_price
+            strongest_volum_level = [0, 0]
 
-            elif (recommendation == 'STRONG_SELL'):
-                signals_list.append((symbol, -1))             
+            for _, _, m, v in vpvr_levels:
+                cur_volum_level = v / (1 + abs(cur_price - m) / cur_price)
+                if cur_volum_level > strongest_volum_level[0]:
+                    strongest_volum_level = [cur_volum_level, m]                                
 
-        return signals_list    
+            if vpvr_levels[0][2] > cur_price and vpvr_levels[1][2] > cur_price:
+                return "L", immediate_level
+            elif vpvr_levels[0][2] < cur_price and vpvr_levels[1][2] < cur_price:
+                return "S", immediate_level
+            elif strongest_volum_level[1] > cur_price:
+                return "L", strongest_volum_level[1]
+            elif strongest_volum_level[1] < cur_price:
+                return "L", strongest_volum_level[1]
 
-class INDICATORS_STRATEGYY(INDICATORS):
+        return
+
+class INDICATORS_STRATEGYY(CONDITION_ANALYSES):
     def __init__(self) -> None:
         super().__init__()
         # устанавливаем функциии декораторы
         self.get_signals = self.log_exceptions_decorator(self.get_signals)
     
     def get_signals(self, strategy_list, coins_list):
-        # print(ema1_period, self.ema2_period, ema3_period)
+        for symbol in coins_list:
+            df = None
+            signals_assum = 0
+            long_trend = False
+            short_trend = False
+            atr_period = self.ema2_period + self.ema1_period
+            try:
+                df = self.get_klines(symbol, self.interval, self.ema_trend_line) 
+                if (not isinstance(df, pd.DataFrame) or df.empty):
+                    continue
+                if self.indicators_strategy_number not in [13,14]:
+                    if not self.swirch_to_WMA_flag:
+                        df = self.calculate_ema(df)
+                    else:
+                        df = self.calculate_wma(df)
+            except Exception as ex:
+                self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}")
+                continue
 
-        if 'trading_view_ind' in strategy_list:                        
-            get_tv_signals_list = self.get_tv_signals(coins_list)
-            if get_tv_signals_list:
-                for symbol, cur_signal in get_tv_signals_list:
-                    df = None
-                    try:
-                        df = self.get_klines(symbol, self.interval, self.ema_trend_line)
-                        if isinstance(df, pd.DataFrame) and not df.empty:
-                            cur_price = df['Close'].iloc[-1]
-                            if 'trend_line' not in strategy_list:
-                                return symbol, cur_signal, cur_price, df
-                                            
-                            df = self.calculate_ema(df, self.ema1_period, self.ema2_period, self.ema_trend_line)
-                            trend_line_defender_val = self.trend_line_defender(df)
-                            if cur_signal == 1 and trend_line_defender_val == "L":                                       
-                                return symbol, 1, cur_price, df 
-                            if cur_signal == -1 and trend_line_defender_val == "S":                         
-                                return symbol, -1, cur_price, df
-                    except Exception as ex:
-                        # print(ex)
-                        self.black_coins_list.append(symbol)
-                        self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
+            # if self.over_moving_by_ATR_flag or self.find_coins_in_flat_by_BB_KC or self.find_coins_in_flat_by_ATR:
+            #     if not self.flat_filter_handler(df, atr_period, symbol):                 
+            #         continue           
 
-                    time.sleep(0.05)
-        else:
-            for symbol in coins_list:
-                signals_assum = 0
-                long_trend = False
-                short_trend = False
-                df = None
-                try:                        
-                    df = self.get_klines(symbol, self.interval, self.ema_trend_line)
-                    if isinstance(df, pd.DataFrame) and not df.empty:
-                        df = self.calculate_ema(df, ema1_period, self.ema2_period, self.ema_trend_line
-                        cur_price = df["Close"].iloc[-1]
-                        # print(f"cur_price: {cur_price}")           
+            # print(symbol)
+            try:
+                cur_price = df["Close"].iloc[-1]
+                # print(f"cur_price: {cur_price}")                                        
+                if 'ema_crossover' in strategy_list:                    
+                    ema_crossover_defender_val = self.ema_crossover_defender(df)                       
+                    if ema_crossover_defender_val == "L":
+                        # print(f"ema_crossover signals_assum += 1")
+                        signals_assum += 1  
+                    elif ema_crossover_defender_val == "S":
+                        # print(f"ema_crossover signals_assum -= 1")
+                        signals_assum -= 1
+
+                if self.indicators_strategy_number == 13:
+                    is_anomaly_resp = None             
+                    is_anomaly_resp = self.calculate_anomalous_volume_1(df)
+
+                    if is_anomaly_resp is None:
+                        print("Проблемы с расчетом аномального индикатора обьема")
+                        time.sleep(0.01)
+                        continue
+                    is_anomaly_volume_true, volum_direction = is_anomaly_resp
+                    if is_anomaly_volume_true:
+                        return symbol, volum_direction*(-1), cur_price, df
+                    
+                if self.indicators_strategy_number == 14:
+                    if self.filter_flat_coins_by_BB_and_KC(df, atr_period):
+                        print(f"{symbol} во флете")
+                        is_anomaly_resp = None             
+                        is_anomaly_resp = self.calculate_anomalous_volume_2(df)
+
+                        if is_anomaly_resp is None:
+                            print("Проблемы с расчетом аномального индикатора обьема 2")
+                            time.sleep(0.01)
+                            continue
+                        is_anomaly_volume_true, volum_direction = is_anomaly_resp
+                        if is_anomaly_volume_true:
+                            return symbol, volum_direction*(-1), cur_price, df
+                    continue
+
+                if self.indicators_strategy_number in [2,3,5,7,9]:
+                    trend_line_defender_val = self.trend_line_defender(df)
+                    if trend_line_defender_val == "L":
+                        # print(f"trend_line signals_assum += 1")
+                        long_trend = True
+                        if 'trend_line' in strategy_list:
+                            signals_assum += 1
+                        if 'anti_trend_line' in strategy_list:
+                            signals_assum -= 1
+                    elif trend_line_defender_val == "S":
+                        # print(f"trend_line signals_assum -= 1")
+                        short_trend = True
+                        if 'trend_line' in strategy_list:
+                            signals_assum -= 1
+                        if 'anti_trend_line' in strategy_list:
+                            signals_assum += 1 
+
+                if self.indicators_strategy_number in [8,9,10,11]:
+                    random_defender_repl = None
+                    random_defender_repl = self.random_defender(strategy_list, long_trend, short_trend)
+                    if not random_defender_repl:
+                        self.handle_messagee(f"Какие-то проблемы при попытке получить сигнал от рандомных индикаторов")
+                    elif random_defender_repl == 1:
+                        return symbol, 1, cur_price, df
+                    elif random_defender_repl == -1:
+                        return symbol, -1, cur_price, df
+                    
+                if 'stoch_rsi_crossover' in strategy_list:
+                    df = self.calculate_stoch_rsi(df)
+                    stoch_rsi_srossover_defender_val = self.stoch_rsi_srossover_defender(df)
+                    if stoch_rsi_srossover_defender_val == "L":
+                        signals_assum += 1
+                    elif stoch_rsi_srossover_defender_val == "S":
+                        signals_assum -= 1
+
+                if 'stoch_rsi_overTrade' in strategy_list:
+                    df = self.calculate_stoch_rsi(df)
+                    stoch_rsi_overTrade_defender_val = self.stoch_rsi_overTrade_defender(df)
+                    # print(stoch_rsi_overTrade_defender_val)
+                    if stoch_rsi_overTrade_defender_val == "L":
+                        signals_assum += 1
+                    elif stoch_rsi_overTrade_defender_val == "S":
+                        signals_assum -= 1
                         
-                        if 'ema_crossover' in strategy_list: 
-                            ema_crossover_defender_val = ema_crossover_defender(df)                       
-                            if ema_crossover_defender_val == "L":
-                                # print(f"ema_crossover signals_assum += 1")
-                                signals_assum += 1  
-                            elif ema_crossover_defender_val == "S":
-                                # print(f"ema_crossover signals_assum -= 1")
-                                signals_assum -= 1
-                            # else:
-                            #     print(f"ema_crossover signals_assum: None")
+                if 'vpvr_level' in strategy_list:
+                    immediate_vpvr_level_defender_val = None
+                    vpvr = self.calculate_vpvr(df)                       
+                    vpvr_levels = self.find_vpvr_levels(vpvr)
+                    immediate_vpvr_level_defender_val = self.immediate_vpvr_level_defender(cur_price, vpvr_levels)
+                    
+                    if immediate_vpvr_level_defender_val:
+                        if immediate_vpvr_level_defender_val[0] == 'L':
+                            # print("L")
+                            signals_assum += 1
+                        elif immediate_vpvr_level_defender_val[0] == 'S':
+                            # print("S")
+                            signals_assum -= 1
+                        self.vpvr_level_line = immediate_vpvr_level_defender_val[1]
 
-                        if {'trend_line', 'anti_trend_line'} & set(strategy_list):
-                            trend_line_defender_val = trend_line_defender(df)
-                            if trend_line_defender_val == "L":
-                                # print(f"trend_line signals_assum += 1")
-                                long_trend = True
-                                if 'trend_line' in strategy_list:
-                                    signals_assum += 1
-                                if 'anti_trend_line' in strategy_list:
-                                    signals_assum -= 1
-                            elif trend_line_defender_val == "S":
-                                # print(f"trend_line signals_assum -= 1")
-                                short_trend = True
-                                if 'trend_line' in strategy_list:
-                                    signals_assum -= 1
-                                if 'anti_trend_line' in strategy_list:
-                                    signals_assum += 1                    
-                            
-                        if 'stoch_rsi_crossover' in strategy_list:
-                            df = self.calculate_stoch_rsi(df)
-                            stoch_rsi_srossover_defender_val = stoch_rsi_srossover_defender(df)
-                            if stoch_rsi_srossover_defender_val == "L":
-                                signals_assum += 1
-                            elif stoch_rsi_srossover_defender_val == "S":
-                                signals_assum -= 1
-
-                        if 'stoch_rsi_overTrade' in strategy_list:
-                            df = self.calculate_stoch_rsi(df)
-                            stoch_rsi_overTrade_defender_val = stoch_rsi_overTrade_defender(df)
-                            # print(stoch_rsi_overTrade_defender_val)
-                            if stoch_rsi_overTrade_defender_val == "L":
-                                signals_assum += 1
-                            elif stoch_rsi_overTrade_defender_val == "S":
-                                signals_assum -= 1
-
-                        if {'trande_shift_random', 'long_shift_random', 'short_shift_random'} & set(strategy_list):
-                            if 'trande_shift_random' in strategy_list:
-                                if long_trend:
-                                    random_list = [1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2]
-
-                                elif short_trend:
-                                    random_list = [2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1]
-
-                                if long_trend or short_trend:                         
-                                    if choice(random_list) % 2 != 0:
-                                        return symbol, 1, cur_price, df
-                                    else:
-                                        return symbol, -1, cur_price, df
-                            else:
-                                if 'long_shift_random' in strategy_list:
-                                    random_list = [1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 2, 1, 2]
-                                if 'short_shift_random' in strategy_list:
-                                    random_list = [2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1]
-                                if choice(random_list) % 2 != 0:
-                                    return symbol, 1, cur_price, df
-                                else:
-                                    return symbol, -1, cur_price, df
-                                
-                        if 'vpvr_level' in strategy_list:
-                            immediate_vpvr_level_defender_val = None
-                            vpvr = self.calculate_vpvr(df)                       
-                            vpvr_levels = self.find_vpvr_levels(vpvr)
-                            immediate_vpvr_level_defender_val = self.immediate_vpvr_level_defender(cur_price, vpvr_levels)
-                            
-                            if immediate_vpvr_level_defender_val:
-                                if immediate_vpvr_level_defender_val[0] == 'L':
-                                    # print("L")
-                                    signals_assum += 1
-                                elif immediate_vpvr_level_defender_val[0] == 'S':
-                                    # print("S")
-                                    signals_assum -= 1
-                                self.vpvr_level_line = immediate_vpvr_level_defender_val[1]
-
-                        if signals_assum > 0 and signals_assum == len(strategy_list):
-                            return symbol, 1, cur_price, df 
-                        elif signals_assum < 0 and abs(signals_assum) == len(strategy_list):
-                            return symbol, -1, cur_price, df
-                except Exception as ex:
-                    # print(ex)
-                    # self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
-                    self.black_coins_list.append(symbol)
-                    self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
+                if signals_assum > 0 and signals_assum == len(strategy_list):
+                    # print("LONG " + "Монета: " + symbol)
+                    if self.only_short_trading:
+                        self.handle_messagee(f"Пропускаем сигнал так как self.only_short_trading == {self.only_short_trading}")
+                        time.sleep(0.01)
+                        continue
+                    return symbol, 1, cur_price, df 
                 
-                time.sleep(0.05)
+                elif signals_assum < 0 and abs(signals_assum) == len(strategy_list):
+                    # print("SHORT " + "Монета: " + symbol)
+                    if self.only_long_trading:
+                        self.handle_messagee(f"Пропускаем сигнал так как self.only_long_trading == {self.only_long_trading}")
+                        time.sleep(0.01)
+                        continue
+                    return symbol, -1, cur_price, df
+            except Exception as ex:
+                # print(ex)
+                self.handle_exception(f"{ex} {inspect.currentframe().f_lineno}") 
+                self.black_coins_list.append(symbol)
+                self.candidate_symbols_list = [x for x in self.candidate_symbols_list if x not in self.black_coins_list]
+            
+            time.sleep(0.01)
 
         return None, None, None, None
-    
-    def closing_by_crossover_signal(self, cur_direction):
-        ema_crossover_defender_val = ema_crossover_defender(df)                       
-        if ema_crossover_defender_val == "L":
-            # print(f"ema_crossover signals_assum += 1")
-            signals_assum += 1  
-        elif ema_crossover_defender_val == "S":
-            # print(f"ema_crossover signals_assum -= 1")
-            signals_assum -= 1
-        # else:
-        #     print(f"ema_crossover signals_assum: None")
-   

@@ -16,6 +16,22 @@ class PARAMS(SEC_SETTINGSS):
         self.lev_size_default = self.lev_size
         self.retry_trade = False
         self.last_win_los = None
+        if self.only_long_trading or self.only_short_trading:
+            self.only_long_trading = not self.only_short_trading
+        self.default_reverse_signal = self.is_reverse_signal
+        if not self.martin_gale_flag:
+            self.classikal_martin_gale = False
+        self.only_long_trading_default = self.only_long_trading
+        self.only_short_trading_default = self.only_short_trading   
+        if (self.only_stop_loss_flag or self.only_take_profit_flag) and self.stop_loss_global_type != 2:
+            self.only_stop_loss_flag, self.only_take_profit_flag = False, False
+            print("Смена флагов self.only_stop_loss_flag и self.only_take_profit_flag в режим True допустима только для фиксированной стратегии стоп лосса (self.stop_loss_global_type = 2). Поэтому данные флаги неактивны")
+            print("self.only_stop_loss_flag, self.only_take_profit_flag = False, False")
+        self.average_volume_window = self.ema2_period + self.ema1_period
+        self.EMA_degree_tuple = (self.ema1_period, self.ema1_period*2, self.ema1_period*3, self.ema1_period*4) # значение волн ema для self.peacock_ tail_EMA_flag = True
+        self.ma_key_name = 'EMA'
+        if self.swirch_to_WMA_flag:
+            self.ma_key_name = 'WMA'        
         self.default_tg_vars()
         self.init_some_params()
         self.init_main_file_variables()
@@ -25,14 +41,18 @@ class PARAMS(SEC_SETTINGSS):
         self.indicators_strategy_text_patterns = {
             '1': 'ema_crossover',
             '2': 'ema_crossover + trend_line',
-            '3': 'ema_crossover + stoch_rsi_crossover',
-            '4': 'ema_crossover + stoch_rsi_crossover + trend_line',
-            '5': 'ema_crossover + stoch_rsi_overTrade',
-            '6': 'ema_crossover + stoch_rsi_overTrade + trend_line',
-            '7': 'smart_random + trend_line',
-            '8': 'trading_view_ind',
-            '9': 'trading_view_ind + trend_line',
-            '10': 'ema_crossover + vpvr_level',
+            '3': 'ema_crossover + anty_trend_line',
+            '4': 'ema_crossover + stoch_rsi_crossover',
+            '5': 'ema_crossover + stoch_rsi_crossover + trend_line',
+            '6': 'ema_crossover + stoch_rsi_overTrade',
+            '7': 'ema_crossover + stoch_rsi_overTrade + trend_line',
+            '8': 'ema_crossover + simple_random',
+            '9': 'ema_crossover + trande_shift_random',
+            '10': 'ema_crossover + long_shift_random',
+            '11': 'ema_crossover + short_shift_random',
+            '12': 'ema_crossover + vpvr_level',
+            '13': 'volum_splash_indicator',
+            '14': 'find_flats + volum_splash_indicator_2'
         }
 
         self.stop_loss_global_type_text_patterns = {
@@ -58,7 +78,6 @@ class PARAMS(SEC_SETTINGSS):
         self.current_signal_val = None
         self.last_signal_val = None
         self.in_position = False 
-        self.last_direction = None   
         self.close_open_dispetcher = False 
         self.is_first_position = True  
         self.create_order_success_flag = False
@@ -95,6 +114,7 @@ class PARAMS(SEC_SETTINGSS):
     def ema_settings(self):
         self.interval = str(self.kline_time) + self.time_frame
         self.indicators_strategy_list_list = [
+            [self.SOLI_DEO_GLORIA],
             ['ema_crossover'],
             ['ema_crossover', 'trend_line'],
             ['ema_crossover', 'anty_trend_line'],
@@ -106,19 +126,11 @@ class PARAMS(SEC_SETTINGSS):
             ['ema_crossover', 'trande_shift_random'],
             ['ema_crossover', 'long_shift_random'],
             ['ema_crossover', 'short_shift_random'],
-
             ['ema_crossover', 'vpvr_level'],
-
-            ['trading_view_ind'],
-            ['trading_view_ind', 'trend_line'],
-            ['trading_view_ind', 'anti_trend_line'],
-            ['ema_crossover', 'simple_random'],
-            ['ema_crossover', 'trande_shift_random'],
-            ['ema_crossover', 'long_shift_random'],
-            ['ema_crossover', 'short_shift_random'],
-
+            ['volum_splash_indicator'],
+            ['find_flats', 'volum_splash_indicator_2']
         ]
-        self.indicators_strategy_list = self.indicators_strategy_list_list[self.indicators_strategy_number - 1]
+        self.indicators_strategy_list = self.indicators_strategy_list_list[self.indicators_strategy_number]
 
     def default_statistic_vars(self):        
         self.win_los = 0 # результат последней сделки (в плюс или в минус)
@@ -161,5 +173,6 @@ class PARAMS(SEC_SETTINGSS):
         # self.coinMarketCup_api_token = COIN_MARKET_CUP_TOKEN
         # self.proxy_host = proxy_host
         # self.proxy_port = proxy_port
+        # self.proxy_socks5_port = proxy_socks5_port
         # self.proxy_username = proxy_username
         # self.proxy_password = proxy_password
